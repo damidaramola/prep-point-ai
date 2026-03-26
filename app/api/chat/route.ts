@@ -33,6 +33,8 @@ FLIGHTS:
 
 HOTEL:
 [hotel recommendation]
+
+make sure to summarise the weather, flights and hotel expectations to 1-2 lines
   
   `
   const result = await model.generateContent(prompt);

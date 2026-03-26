@@ -36,6 +36,10 @@ export default function Onboarding() {
 
             });
 
+            if(!res.ok){
+                throw new Error("API failed")
+            }
+
             const data = await res.json();
 
             setResult(data.text);
@@ -123,7 +127,7 @@ export default function Onboarding() {
             </form>
 
             {result && (
-                <div className="mt-6 p-4 bg-blue-100 rounded">
+                <div className="mt-6 p-4 bg-100 rounded">
                     <h2>Your Trip</h2>
                     <p className="whitespace-pre-line">{result}</p>
                 </div>
