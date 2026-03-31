@@ -3,6 +3,7 @@
 import React from "react"
 import { useState } from "react"
 import { FormEvent } from "react";
+import { useRouter } from "next/navigation"
 
 export default function Onboarding() {
 
@@ -20,6 +21,7 @@ export default function Onboarding() {
     const handleChange = (e: any) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     }
+    const router = useRouter();
 
     const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -42,8 +44,7 @@ export default function Onboarding() {
 
             const data = await res.json();
 
-            setResult(data.text);
-
+            router.push(`/result?text=${encodeURIComponent(data.text)}`);
 
         }
         catch (err) {
