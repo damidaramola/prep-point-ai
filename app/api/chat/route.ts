@@ -35,12 +35,41 @@ HOTEL:
 [hotel recommendation]
 
 make sure to summarise the weather, flights and hotel expectations to 1-2 lines
+
+this is an example of what the output should look like:
+
+Your Trip Plan 
+
+${form.FromDate} to  ${form.ToDate}
+
+ ${form.FlyingFrom} ->  ${form.FlyingTo}
+
+ Weather:
+ You can expect the weather to be quite mild. Low will be 19° and high will be 25° (replace this text with the actual expected weather)
+
+ Flights
+ The best option for you is with Delta Airlines with a layover in Oslo((replace this text with flights appropriate for ${form.FlyingFrom} to  ${form.FlyingTo} )
+
+ Hotel:
+
+ We recommend you stay at the Premiere Inn hotel in central Paris (replace this text with the best possible hotel/accomodation option for the trip)
+
+ Return ONLY valid JSON in this format:
+
+{
+  "trip": "",
+  "weather": "",
+  "flights": "",
+  "hotel": ""
+}
   
   `
   const result = await model.generateContent(prompt);
   const text = (await result.response).text(); // get text output
 
-  return Response.json({text})
+  const data = JSON.parse(text)
+
+  return Response.json({data})
 
 }
 
