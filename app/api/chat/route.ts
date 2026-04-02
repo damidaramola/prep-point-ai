@@ -56,6 +56,8 @@ ${form.FromDate} to  ${form.ToDate}
 
  Return ONLY valid JSON in this format:
 
+ ${JSON.stringify(form)} 
+
 {
   "trip": "",
   "weather": "",

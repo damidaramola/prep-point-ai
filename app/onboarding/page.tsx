@@ -2,8 +2,8 @@
 
 import React from "react"
 import { useState } from "react"
-import { FormEvent } from "react";
 import { useRouter } from "next/navigation"
+
 
 export default function Onboarding() {
 
@@ -37,14 +37,22 @@ export default function Onboarding() {
 
 
             });
+      console.log("STATUS:", res.status);
 
-            if(!res.ok){
+
+
+
+            if (!res.ok) {
                 throw new Error("API failed")
             }
+            
 
             const data = await res.json();
 
-            router.push(`/result?text=${encodeURIComponent(data.text)}`);
+            localStorage.setItem("travelResult", JSON.stringify(data));
+            localStorage.setItem("travelForm", JSON.stringify(form));
+
+            router.push("/result");
 
         }
         catch (err) {
@@ -64,6 +72,8 @@ export default function Onboarding() {
                     <label className="mb-1 font-medium">Number of Travellers</label>
                     <input
                         className="border p-2 rounded"
+                        type="number"
+
                         name="NumberofTravellers"
                         value={form.NumberofTravellers}
                         onChange={handleChange}
@@ -74,6 +84,7 @@ export default function Onboarding() {
                     <label className="mb-1 font-medium">Flying From</label>
                     <input
                         className="border p-2 rounded"
+                        placeholder="e.g. Dublin"
                         name="FlyingFrom"
                         value={form.FlyingFrom}
                         onChange={handleChange}
