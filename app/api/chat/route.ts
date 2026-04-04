@@ -56,6 +56,12 @@ ${form.FromDate} to  ${form.ToDate}
 
  Return ONLY valid JSON in this format:
 
+Do NOT include markdown, backticks.
+IMPORTANT:
+- Do NOT repeat the input
+- Do NOT include multiple JSON objects
+- Respond with ONLY ONE JSON object
+
  ${JSON.stringify(form)} 
 
 {
@@ -69,9 +75,24 @@ ${form.FromDate} to  ${form.ToDate}
   const result = await model.generateContent(prompt);
   const text = (await result.response).text(); // get text output
 
-  const data = JSON.parse(text)
+  console.log("RAW:", text);
 
-  return Response.json({data})
+  // remove markdown if present
+  const cleaned = text
+    .replace(/```json/g, "")
+    .replace(/```/g, "")
+    .trim();
+
+  // 🔥 extract ONLY the LAST JSON object
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}$/);
+
+  if (!jsonMatch) {
+    throw new Error("No valid JSON found");
+  }
+
+  const data = JSON.parse(jsonMatch[0]);
+
+  return Response.json(data);
 
 }
 
