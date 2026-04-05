@@ -17,6 +17,8 @@ export default function Onboarding() {
 
     })
 
+    const [loading, setloading] = useState(false);
+
     const [result, setResult] = useState("");
     const handleChange = (e: any) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -25,7 +27,7 @@ export default function Onboarding() {
 
     const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault();
-
+        setloading(true)
         try {
             const res = await fetch("/api/chat", {
                 method: "POST",
@@ -37,7 +39,7 @@ export default function Onboarding() {
 
 
             });
-      console.log("STATUS:", res.status);
+            console.log("STATUS:", res.status);
 
 
 
@@ -45,7 +47,7 @@ export default function Onboarding() {
             if (!res.ok) {
                 throw new Error("API failed")
             }
-            
+
 
             const data = await res.json();
 
@@ -135,15 +137,16 @@ export default function Onboarding() {
 
 
                 <button type="submit" className="border p-2 rounded"
-                >Plan my trip!</button>
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                    ) : (
+                        "Plan my trip!"
+                    )}</button>
             </form>
 
-            {result && (
-                <div className="mt-6 p-4 bg-100 rounded">
-                    <h2>Your Trip</h2>
-                    <p className="whitespace-pre-line">{result}</p>
-                </div>
-            )}
+
         </div>
     );
 
