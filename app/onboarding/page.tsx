@@ -79,6 +79,7 @@ export default function Onboarding() {
                         name="NumberofTravellers"
                         value={form.NumberofTravellers}
                         onChange={handleChange}
+                        required
                     />
                 </div>
 
@@ -90,6 +91,7 @@ export default function Onboarding() {
                         name="FlyingFrom"
                         value={form.FlyingFrom}
                         onChange={handleChange}
+                        required
                     />
                 </div>
 
@@ -100,6 +102,7 @@ export default function Onboarding() {
                         name="FlyingTo"
                         value={form.FlyingTo}
                         onChange={handleChange}
+                        required
                     />
                 </div>
 
@@ -111,6 +114,7 @@ export default function Onboarding() {
                         name="FromDate"
                         value={form.FromDate}
                         onChange={handleChange}
+                        required
                     />
                 </div>
 
@@ -122,6 +126,7 @@ export default function Onboarding() {
                         name="ToDate"
                         value={form.ToDate}
                         onChange={handleChange}
+                        required
                     />
                 </div>
 
@@ -132,18 +137,23 @@ export default function Onboarding() {
                         name="Budget"
                         value={form.Budget}
                         onChange={handleChange}
+                        required
                     />
                 </div>
 
 
-                <button type="submit" className="border p-2 rounded"
-                    disabled={loading}
-                >
-                    {loading ? (
-                        <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
-                    ) : (
-                        "Plan my trip!"
-                    )}</button>
+                {loading ? (
+                    <div className="flex justify-center">
+                        <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                    </div>
+                ) : (
+                    <button
+                        type="submit"
+                        className="border p-2 rounded"
+                    >
+                        Plan my trip!
+                    </button>
+                )}
             </form>
 
 
