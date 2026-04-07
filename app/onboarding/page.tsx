@@ -3,6 +3,7 @@
 import React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Autocomplete from "../components/Autocomplete_location";
 
 
 export default function Onboarding() {
@@ -83,28 +84,22 @@ export default function Onboarding() {
                     />
                 </div>
 
-                <div className="flex flex-col">
-                    <label className="mb-1 font-medium">Flying From</label>
-                    <input
-                        className="border p-2 rounded"
-                        placeholder="e.g. Dublin"
-                        name="FlyingFrom"
-                        value={form.FlyingFrom}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
+                <Autocomplete
+                    label="Flying From"
+                    value={form.FlyingFrom}
+                    onChangeAction={(value) =>
+                        setForm({ ...form, FlyingFrom: value })
+                    }
+                />
 
-                <div className="flex flex-col">
-                    <label className="mb-1 font-medium">Flying To</label>
-                    <input
-                        className="border p-2 rounded"
-                        name="FlyingTo"
-                        value={form.FlyingTo}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
+
+                <Autocomplete
+                    label="Flying To"
+                    value={form.FlyingTo}
+                    onChangeAction={(value) =>
+                        setForm({ ...form, FlyingTo: value })
+                    }
+                />
 
                 <div className="flex flex-col">
                     <label className="mb-1 font-medium">From Date</label>
