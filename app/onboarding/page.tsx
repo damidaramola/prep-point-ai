@@ -28,6 +28,11 @@ export default function Onboarding() {
 
     const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if(form.ToDate < form.FromDate){
+            alert("Return date must not be before depature date")
+            return;
+        }
         setloading(true)
         try {
             const res = await fetch("/api/chat", {
@@ -122,6 +127,7 @@ export default function Onboarding() {
                         value={form.ToDate}
                         onChange={handleChange}
                         required
+                        min={form.FromDate}
                     />
                 </div>
 
