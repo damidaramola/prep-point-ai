@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation"
 export default function LandingPage() {
   const router = useRouter()
   const handleRedirect = () => {
-    router.push(`/onboarding`)
+    router.push(`/trip-setup`)
 
   }
     return (
