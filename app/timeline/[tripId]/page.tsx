@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const todos = [
     { id: 1, title: "Check passport", done: false },
@@ -14,6 +15,13 @@ const todos = [
 
 
 export default function Timeline() {
+
+    const router = useRouter();
+
+    const goToPackingPage = () => {
+
+        router.push(`/packing/${trip.id}`)
+    }
 
     const [tasks, setTasks] = useState(todos);
 
@@ -78,7 +86,18 @@ export default function Timeline() {
                     </li>
                 ))}
             </ul>
+
+            <div className="mt-6">
+                <button
+                    type="button"
+                    onClick={goToPackingPage}
+                    className="border p-2 rounded"
+                >
+                    Lets Pack!
+                </button>
+            </div>
         </div>
+
     );
 }
 
