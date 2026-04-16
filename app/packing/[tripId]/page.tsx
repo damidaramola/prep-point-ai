@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
+import { useParams } from "next/navigation";
 type Item = {
   id: number;
   name: string;
@@ -28,7 +28,10 @@ const defaultItems: Item[] = [
   { id: 9, name: "Adapter", category: "Electronics", packed: false },
 ];
 
+
 export default function PackingPage() {
+  const params = useParams();
+  const tripId = params.tripId as string;
   const [items, setItems] = useState<Item[]>([]);
 
   useEffect(() => {
@@ -61,10 +64,23 @@ export default function PackingPage() {
   const packed = items.filter((i) => i.packed).length;
   const overallProgress = total ? Math.round((packed / total) * 100) : 0;
 
-  return (
+  const isComplete = overallProgress === 100;
+
+  useEffect(() => {
+    if (!tripId) return;
+
+    localStorage.setItem(
+      `packingComplete-${tripId}`,
+      JSON.stringify(isComplete)
+    );
+  }, [isComplete, tripId]);
+  useEffect(() => {
+    if (!tripId) return;
+
+    localStorage.setItem(`packing-${tripId}`, JSON.stringify(items));
+  }, [items, tripId]); return (
     <div className="max-w-xl mx-auto p-6">
       <h1 className="text-xl font-bold mb-4">Packing Checklist 🎒</h1>
-
       {/* Overall Progress */}
       <div className="mb-6">
         <div className="bg-gray-200 h-3 rounded overflow-hidden">
@@ -120,6 +136,6 @@ export default function PackingPage() {
       })}
 
     </div>
-    
+
   );
 }

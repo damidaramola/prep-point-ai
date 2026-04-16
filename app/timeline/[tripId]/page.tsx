@@ -54,7 +54,23 @@ export default function Timeline() {
     }, [tasks]);
 
     if (!trip) return <p>Loading trip...</p>;
+    useEffect(() => {
+        const isPacked = localStorage.getItem(`packingComplete-${trip.id}`);
 
+        if (isPacked === "true") {
+            setTasks(prev =>
+                prev.map(task =>
+                    task.title === "Pack bags"
+                        ? { ...task, done: true }
+                        : task
+                )
+            );
+        }
+    }, [trip]);
+
+    localStorage.setItem(`tasks-${trip.id}`, JSON.stringify(tasks));
+
+    const stored = localStorage.getItem(`tasks-${trip.id}`);
 
     return (
         <div className="max-w-xl mx-auto p-6">
