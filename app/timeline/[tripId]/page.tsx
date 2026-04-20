@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 const todos = [
     { id: 1, title: "Check passport", done: false },
@@ -35,12 +36,19 @@ export default function Timeline() {
         (tasks.filter(t => t.done).length / tasks.length) * 100) : 0;
     const [trip, setTrip] = useState<any>(null);
 
+    const { tripId } = useParams();
+
     useEffect(() => {
         const storedTrip = localStorage.getItem("trip");
+
         if (storedTrip) {
-            setTrip(JSON.parse(storedTrip));
+            const parsed = JSON.parse(storedTrip);
+
+            if (parsed.id === tripId) {
+                setTrip(parsed);
+            }
         }
-    }, []);
+    }, [tripId]);
 
     useEffect(() => {
         const storedTasks = localStorage.getItem("tasks");
@@ -53,8 +61,12 @@ export default function Timeline() {
         localStorage.setItem("tasks", JSON.stringify(tasks));
     }, [tasks]);
 
-    if (!trip) return <p>Loading trip...</p>;
+ 
+
+
     useEffect(() => {
+        if (!trip) return;
+
         const isPacked = localStorage.getItem(`packingComplete-${trip.id}`);
 
         if (isPacked === "true") {
@@ -68,15 +80,11 @@ export default function Timeline() {
         }
     }, [trip]);
 
-    localStorage.setItem(`tasks-${trip.id}`, JSON.stringify(tasks));
-
-    const stored = localStorage.getItem(`tasks-${trip.id}`);
-
     return (
         <div className="max-w-xl mx-auto p-6">
             <h1 className="text-xl font-semibold mb-3">Pre-Flight Checklist ✈️</h1>
             <h2 className="text-sm text-gray-600 mb-4">
-                {trip.FlyingFrom} → {trip.FlyingTo} | {trip.FromDate} → {trip.ToDate}
+                {trip?.FlyingFrom} → {trip?.FlyingTo} | {trip?.FromDate} → {trip?.ToDate}
             </h2>
             {/* Progress bar */}
             <div className="bg-gray-200 rounded h-3 mb-4 overflow-hidden">
@@ -112,6 +120,8 @@ export default function Timeline() {
                     Lets Pack!
                 </button>
             </div>
+
+      
         </div>
 
     );
