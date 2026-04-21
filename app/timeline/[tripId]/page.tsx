@@ -18,25 +18,19 @@ const todos = [
 export default function Timeline() {
 
     const router = useRouter();
-
-    const goToPackingPage = () => {
-
-        router.push(`/packing/${trip.id}`)
-    }
-
+    const { tripId } = useParams();
+    const [trip, setTrip] = useState<any>(null);
     const [tasks, setTasks] = useState(todos);
+    const [loaded, setLoaded] = useState(false);
 
     const toggleTask = (id: number) => {
-        setTasks(prev => prev.map(task => task.id === id ? { ...task, done: !task.done } : task)
-
-        )
+        setTasks(prev =>
+            prev.map(task => task.id === id ? { ...task, done: !task.done } : task)
+        );
     };
-
-    const completion = tasks.length ? Math.round(
-        (tasks.filter(t => t.done).length / tasks.length) * 100) : 0;
-    const [trip, setTrip] = useState<any>(null);
-
-    const { tripId } = useParams();
+    const completion = tasks.length
+        ? Math.round((tasks.filter(t => t.done).length / tasks.length) * 100)
+        : 0;
 
     useEffect(() => {
         const storedTrip = localStorage.getItem("trip");
@@ -51,17 +45,20 @@ export default function Timeline() {
     }, [tripId]);
 
     useEffect(() => {
-        const storedTasks = localStorage.getItem("tasks");
+        if (!tripId) return;
+        const storedTasks = localStorage.getItem(`tasks-${tripId}`);
         if (storedTasks) {
             setTasks(JSON.parse(storedTasks));
+        } else {
+            setTasks(todos);
         }
-    }, []);
+        setLoaded(true);
+    }, [tripId]);
 
     useEffect(() => {
-        localStorage.setItem("tasks", JSON.stringify(tasks));
-    }, [tasks]);
-
- 
+        if (!loaded || !tripId) return;
+        localStorage.setItem(`tasks-${tripId}`, JSON.stringify(tasks));
+    }, [tasks, tripId, loaded]);
 
 
     useEffect(() => {
@@ -78,7 +75,11 @@ export default function Timeline() {
                 )
             );
         }
-    }, [trip]);
+    }, [trip]
+
+
+    );
+
 
     return (
         <div className="max-w-xl mx-auto p-6">
@@ -114,14 +115,14 @@ export default function Timeline() {
             <div className="mt-6">
                 <button
                     type="button"
-                    onClick={goToPackingPage}
+                    onClick={() => router.push(`/packing/${tripId}`)}
                     className="border p-2 rounded"
                 >
                     Lets Pack!
                 </button>
             </div>
 
-      
+
         </div>
 
     );
