@@ -33,7 +33,7 @@ export default function Timeline() {
         : 0;
 
     useEffect(() => {
-        const storedTrip = localStorage.getItem("trip");
+        const storedTrip = localStorage.getItem(`trip-${tripId}`);
 
         if (storedTrip) {
             const parsed = JSON.parse(storedTrip);

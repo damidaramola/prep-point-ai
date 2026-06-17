@@ -43,8 +43,7 @@ export default function TripSetUp() {
             ...form
         };
 
-        localStorage.setItem("trip", JSON.stringify(trip));
-
+        localStorage.setItem(`trip-${tripId}`, JSON.stringify(trip));
         router.push(`/timeline/${tripId}`);
     };
 
