@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
+import { Trip } from "../../types"
 
 const todos = [
     { id: 1, title: "Check passport", done: false },
@@ -19,7 +20,7 @@ export default function Timeline() {
 
     const router = useRouter();
     const { tripId } = useParams();
-    const [trip, setTrip] = useState<any>(null);
+    const [trip, setTrip] = useState<Trip|null>(null);
     const [tasks, setTasks] = useState(todos);
     const [loaded, setLoaded] = useState(false);
 

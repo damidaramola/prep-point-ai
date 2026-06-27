@@ -2,15 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { PackingItem } from "@/app/types";
 
-type Item = {
-  id: number;
-  name: string;
-  category: string;
-  packed: boolean;
-};
-
-const defaultItems: Item[] = [
+const defaultItems: PackingItem[] = [
   { id: 1, name: "T-shirts", category: "Clothing", packed: false },
   { id: 2, name: "Pants", category: "Clothing", packed: false },
   { id: 3, name: "Underwear", category: "Clothing", packed: false },
@@ -27,7 +21,7 @@ export default function PackingPage() {
   const params = useParams();
   const tripId = params.tripId as string;
 
-  const [items, setItems] = useState<Item[]>([]);
+  const [items, setItems] = useState<PackingItem[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   // Load from localStorage using backtick template literal

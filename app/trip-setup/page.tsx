@@ -4,27 +4,24 @@ import React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Autocomplete from "../components/Autocomplete_location";
+import { Trip } from "@/app/types"
 
 
 export default function TripSetUp() {
-    const [form, setForm] = useState({
-        NumberofTravellers: 0,
-        FlyingFrom: "",
-        FlyingTo: "",
-        FromDate: "",
-        ToDate: "",
-        Budget: ""
-
-    })
-
+const [form, setForm] = useState<Omit<Trip, "id">>({
+    NumberofTravellers: 0,
+    FlyingFrom: "",
+    FlyingTo: "",
+    FromDate: "",
+    ToDate: "",
+    Budget: ""
+});
 
 
     const router = useRouter();
 
-    // const [loading, setloading] = useState(false);
-
-    // const [result, setResult] = useState("");
-    const handleChange = (e: any) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>
+) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     }
 

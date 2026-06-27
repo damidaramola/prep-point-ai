@@ -1,4 +1,4 @@
-import { model } from "../../../lib/gemini";
+import { model } from "@lib/gemini";
 
 export async function POST(req: Request) {
   const form = await req.json();

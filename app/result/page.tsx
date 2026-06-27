@@ -1,28 +1,32 @@
 'use client';
 
 import { useEffect, useState } from "react";
-type TravelResult = {
-    trip: string;
-    weather: string;
-    flights: string;
-    hotel: string;
-};
+import { Trip, TravelResult } from "@/app/types"
+
 
 export default function ResultPage() {
 
-    const [result, setResult] = useState<TravelResult | null>(null);
-    const [form, setForm] = useState<any>(null);
-    useEffect(() => {
-        const storedResult = localStorage.getItem("travelResult");
-        const storedForm = localStorage.getItem("travelForm");
+  const [result, setResult] = useState<TravelResult | null>(null);
+  const [form, setForm] = useState<Omit<Trip, "id">>({
+    NumberofTravellers: 0,
+    FlyingFrom: "",
+    FlyingTo: "",
+    FromDate: "",
+    ToDate: "",
+    Budget: ""
+  });
 
-        if (storedResult) setResult(JSON.parse(storedResult));
-        if (storedForm) setForm(JSON.parse(storedForm));
-    }, []);
+  useEffect(() => {
+    const storedResult = localStorage.getItem("travelResult");
+    const storedForm = localStorage.getItem("travelForm");
+
+    if (storedResult) setResult(JSON.parse(storedResult));
+    if (storedForm) setForm(JSON.parse(storedForm));
+  }, []);
   if (!result || !form) return <p className="p-6">Loading...</p>;
 
 
-return (
+  return (
     <main className="p-6 max-w-2xl mx-auto">
 
       {/* Pills */}
