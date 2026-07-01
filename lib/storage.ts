@@ -1,4 +1,5 @@
-import { Trip } from "@/app/types"
+import { Trip, PackingItem, TimeLineTask } from "@/app/types"
+
 
 export function getTrip(tripId: string): Trip | null {
 
@@ -41,8 +42,8 @@ export function deleteTrip(tripId: string): void {
 }
 
 
-export function getAllTrips(): Trip[] | [] {
-    const trips = []
+export function getAllTrips(): Trip[] {
+    const trips: Trip[] = []
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i)
 
@@ -61,4 +62,57 @@ export function getAllTrips(): Trip[] | [] {
 
     }
     return trips
+}
+
+
+export function getPackingItems(tripId: string): PackingItem[] {
+    const pack = localStorage.getItem(`packing-${tripId}`)
+
+    if (!pack) {
+        return []
+    }
+
+    try {
+        return JSON.parse(pack) as PackingItem[]
+    }
+    catch {
+        console.error(`Failed to parse packing data for trip ${tripId}`)
+        return []
+    }
+}
+
+
+export function savePackingItems(tripId: string, items: PackingItem[]): void {
+    try {
+        localStorage.setItem(`packing-${tripId}`, JSON.stringify(items))
+    } catch (error) {
+        console.error("Failed to save Items", error)
+    }
+
+
+}
+
+
+export function getTasks(tripId: string): TimeLineTask[] {
+    const tasks = localStorage.getItem(`tasks-${tripId}`)
+
+    if (!tasks) {
+        return []
+    }
+
+    try {
+        return JSON.parse(tasks) as TimeLineTask[]
+    }
+    catch {
+        console.error(`Could not retrieve tasks for trip ${tripId}`)
+        return []
+    }
+}
+
+export function saveTasks(tripId: string, tasks: TimeLineTask[]): void {
+    try {
+        localStorage.setItem(`tasks-${tripId}`, JSON.stringify(tasks))
+    } catch (error) {
+        console.error("Failed to save tasks", error)
+    }
 }
