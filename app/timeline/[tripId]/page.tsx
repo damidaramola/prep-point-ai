@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
 import { Trip } from "../../types"
+import { saveTasks, getTasks, getTrip, getPackingComplete } from "@/lib/storage";
 
 const todos = [
     { id: 1, title: "Check passport", done: false },
@@ -20,7 +21,7 @@ export default function Timeline() {
 
     const router = useRouter();
     const { tripId } = useParams();
-    const [trip, setTrip] = useState<Trip|null>(null);
+    const [trip, setTrip] = useState<Trip | null>(null);
     const [tasks, setTasks] = useState(todos);
     const [loaded, setLoaded] = useState(false);
 
@@ -34,22 +35,22 @@ export default function Timeline() {
         : 0;
 
     useEffect(() => {
-        const storedTrip = localStorage.getItem(`trip-${tripId}`);
+        if (!tripId || typeof tripId !== 'string') return;
+
+        const storedTrip = getTrip(tripId)
 
         if (storedTrip) {
-            const parsed = JSON.parse(storedTrip);
 
-            if (parsed.id === tripId) {
-                setTrip(parsed);
-            }
+            setTrip(storedTrip);
         }
-    }, [tripId]);
+    }
+        , [tripId]);
 
     useEffect(() => {
-        if (!tripId) return;
-        const storedTasks = localStorage.getItem(`tasks-${tripId}`);
-        if (storedTasks) {
-            setTasks(JSON.parse(storedTasks));
+        if (!tripId || typeof tripId !== "string") return;
+        const storedTasks = getTasks(tripId)
+        if (storedTasks.length> 0) {
+            setTasks(storedTasks)
         } else {
             setTasks(todos);
         }
@@ -57,17 +58,17 @@ export default function Timeline() {
     }, [tripId]);
 
     useEffect(() => {
-        if (!loaded || !tripId) return;
-        localStorage.setItem(`tasks-${tripId}`, JSON.stringify(tasks));
+        if (!loaded || !tripId || typeof tripId !== "string") return;
+        saveTasks(tripId, tasks)
     }, [tasks, tripId, loaded]);
 
 
     useEffect(() => {
-        if (!trip) return;
+        if (!tripId || typeof tripId !== "string") return;
 
-        const isPacked = localStorage.getItem(`packingComplete-${trip.id}`);
+        const isPacked = getPackingComplete(tripId)
 
-        if (isPacked === "true") {
+        if (isPacked === true) {
             setTasks(prev =>
                 prev.map(task =>
                     task.title === "Pack bags"

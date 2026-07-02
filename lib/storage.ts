@@ -116,3 +116,16 @@ export function saveTasks(tripId: string, tasks: TimeLineTask[]): void {
         console.error("Failed to save tasks", error)
     }
 }
+
+export function getPackingComplete(tripId: string): boolean {
+    const isPacked = localStorage.getItem(`packingComplete-${tripId}`)
+    if (isPacked) return true; else return false
+}
+
+export function setPackingComplete(tripId: string, value: boolean): void {
+    try {
+        localStorage.setItem(`packingComplete-${tripId}`, JSON.stringify(value))
+    } catch (error) {
+        console.error('Failed to save result', error)
+    }
+}

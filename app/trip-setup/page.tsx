@@ -5,6 +5,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Autocomplete from "../components/Autocomplete_location";
 import { Trip } from "@/app/types"
+import { saveTrip } from "@/lib/storage";
 
 
 export default function TripSetUp() {
@@ -40,7 +41,7 @@ const [form, setForm] = useState<Omit<Trip, "id">>({
             ...form
         };
 
-        localStorage.setItem(`trip-${tripId}`, JSON.stringify(trip));
+        saveTrip(trip)
         router.push(`/timeline/${tripId}`);
     };
 
