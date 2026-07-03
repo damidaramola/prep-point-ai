@@ -119,7 +119,7 @@ export function saveTasks(tripId: string, tasks: TimeLineTask[]): void {
 
 export function getPackingComplete(tripId: string): boolean {
     const isPacked = localStorage.getItem(`packingComplete-${tripId}`)
-    if (isPacked) return true; else return false
+    return JSON.parse(isPacked ?? "false")  as boolean
 }
 
 export function setPackingComplete(tripId: string, value: boolean): void {
