@@ -8,13 +8,25 @@ interface ButtonProps {
 }
 
 
-export default function Button({ }: ButtonProps) {
-
-        const sizeStyles = {
-        sm: "text-sm p-1",
-        md: "text-base p-2",
-        lg: "text-lg p-3"
+export default function Button({ children, onClick, variant = "secondary", disabled, type = "button", size = "md" }
+    : ButtonProps) {
+    const sizeStyles = {
+        sm: "text-sm px-2 py-1",
+        md: "text-base px-3 py-2",
+        lg: "text-lg px-4 py-3",
     };
 
-    
+    const variantStyles = {
+        primary: "bg-blue-600 text-white rounded",
+        secondary: "border rounded",
+        danger: "bg-red-500 text-white font-bold rounded",
+    };
+
+    return (
+    <button onClick={onClick}  disabled={disabled} type={type}             className={`${variantStyles[variant]} ${sizeStyles[size]}`}
+>
+            {children}
+    </button>
+    )
+
 }
