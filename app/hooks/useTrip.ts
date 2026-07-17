@@ -1,34 +1,38 @@
 "use client"
 
-import {useState, useEffect} from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import {Trip} from "@/app/types";
-import {getTrip} from "@/lib/storage";
+import { Trip } from "@/app/types";
+import { getTrip } from "@/lib/storage";
 
 
-type TripStatus = "loading"| "found"| "not-found";
+type TripStatus = "loading" | "found" | "not-found";
 
-export function useTrip(){
-    const {tripId} = useParams();
-    const [trip,setTrip] = useState<Trip| null>(null);
+export function useTrip() {
+    const { tripId } = useParams();
+    const [trip, setTrip] = useState<Trip | null>(null);
     const [status, setStatus] = useState<TripStatus>("loading")
+    
 
-    useEffect(()=>{
+    useEffect(() => {
         if (!tripId || typeof tripId !== 'string') {
             setStatus("not-found");
-            return 
+            return
         }
         const fetchedTrip = getTrip(tripId)
-    
-        if(fetchedTrip){
+
+        if (fetchedTrip) {
             setTrip(fetchedTrip)
             setStatus("found")
         }
-        else{
+        else {
             setStatus("not-found")
         }
 
-    },[tripId]
+    }, [tripId]
 
     )
+
+    return { trip, status, tripId };
+
 }

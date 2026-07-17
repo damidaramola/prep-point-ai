@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useParams } from "next/navigation";
-import { Trip } from "../../types"
-import { saveTasks, getTasks, getTrip, getPackingComplete } from "@/lib/storage";
+import { saveTasks, getTasks, getPackingComplete } from "@/lib/storage";
+import { useTrip } from "@/app/hooks/useTrip";
+import Button from "@/app/components/Buttons";
 
 const todos = [
     { id: 1, title: "Check passport", done: false },
@@ -20,10 +20,9 @@ const todos = [
 export default function Timeline() {
 
     const router = useRouter();
-    const { tripId } = useParams();
-    const [trip, setTrip] = useState<Trip | null>(null);
+    const {trip,status,tripId} = useTrip();
     const [tasks, setTasks] = useState(todos);
-    const [loaded, setLoaded] = useState(false);
+    const [tasksLoaded, setTasksLoaded] = useState(false);
 
     const toggleTask = (id: number) => {
         setTasks(prev =>
@@ -34,17 +33,7 @@ export default function Timeline() {
         ? Math.round((tasks.filter(t => t.done).length / tasks.length) * 100)
         : 0;
 
-    useEffect(() => {
-        if (!tripId || typeof tripId !== 'string') return;
 
-        const storedTrip = getTrip(tripId)
-
-        if (storedTrip) {
-
-            setTrip(storedTrip);
-        }
-    }
-        , [tripId]);
 
     useEffect(() => {
         if (!tripId || typeof tripId !== "string") return;
@@ -54,13 +43,13 @@ export default function Timeline() {
         } else {
             setTasks(todos);
         }
-        setLoaded(true);
+        setTasksLoaded(true);
     }, [tripId]);
 
     useEffect(() => {
-        if (!loaded || !tripId || typeof tripId !== "string") return;
+        if (!tasksLoaded || !tripId || typeof tripId !== "string") return;
         saveTasks(tripId, tasks)
-    }, [tasks, tripId, loaded]);
+    }, [tasks, tripId, tasksLoaded]);
 
 
     useEffect(() => {
@@ -82,7 +71,18 @@ export default function Timeline() {
 
     );
 
-
+if(status === "loading"){
+    return(<div>Loading..</div>)
+     
+}
+else if(
+    status ==="not-found"
+){
+    
+        return (<div>Trip not found<Button variant="secondary" size="md"  onClick={() => router.push("/landing")}
+ >go to landing page</Button></div>);
+    
+}
     return (
         <div className="max-w-xl mx-auto p-6">
             <h1 className="text-xl font-semibold mb-3">Pre-Flight Checklist ✈️</h1>
