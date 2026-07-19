@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { saveTasks, getTasks, getPackingComplete } from "@/lib/storage";
 import { useTrip } from "@/app/hooks/useTrip";
-import Button from "@/app/components/Buttons";
+import Button from "@/app/components/Button";
 
 const todos = [
     { id: 1, title: "Check passport", done: false },

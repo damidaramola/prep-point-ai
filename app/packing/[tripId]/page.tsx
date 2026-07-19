@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useTrip } from "@/app/hooks/useTrip"
 import { PackingItem } from "@/app/types";
-
+import { getPackingItems, savePackingItems, setPackingComplete } from "@/lib/storage";
+import Button from "@/app/components/Button";
 const defaultItems: PackingItem[] = [
   { id: 1, name: "T-shirts", category: "Clothing", packed: false },
   { id: 2, name: "Pants", category: "Clothing", packed: false },
@@ -18,28 +20,28 @@ const defaultItems: PackingItem[] = [
 
 export default function PackingPage() {
   const router = useRouter();
-  const params = useParams();
-  const tripId = params.tripId as string;
+  const { status, tripId } = useTrip();
 
   const [items, setItems] = useState<PackingItem[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const [itemsLoaded, setItemsLoaded] = useState(false);
 
   // Load from localStorage using backtick template literal
   useEffect(() => {
-    if (!tripId) return;
-    const stored = localStorage.getItem(`packing-${tripId}`);
-    if (stored) {
-      setItems(JSON.parse(stored));
-    } else {
+    if (!tripId ||status !== "found"|| typeof tripId !== "string") return;
+    const storedItems = getPackingItems(tripId);
+    if (storedItems.length > 0) {
+      setItems(storedItems)
+    }
+    else {
       setItems(defaultItems);
     }
-    setLoaded(true);
-  }, [tripId]);
+    setItemsLoaded(true);
+  }, [tripId, status]);
 
   useEffect(() => {
-    if (!loaded || !tripId) return;
-    localStorage.setItem(`packing-${tripId}`, JSON.stringify(items));
-  }, [items, tripId, loaded]);
+    if (!itemsLoaded || status !== "found"|| !tripId || typeof tripId !== "string") return;
+    savePackingItems(tripId, items)
+  }, [items, tripId, itemsLoaded, status]);
 
   // Track completion
   const total = items.length;
@@ -48,9 +50,9 @@ export default function PackingPage() {
   const isComplete = overallProgress === 100;
 
   useEffect(() => {
-    if (!tripId) return;
-    localStorage.setItem(`packingComplete-${tripId}`, JSON.stringify(isComplete));
-  }, [isComplete, tripId]);
+    if (!itemsLoaded ||status !== "found"|| !tripId || typeof tripId !== "string") return;
+    setPackingComplete(tripId, isComplete);
+  }, [isComplete, tripId,status]);
 
   const toggleItem = (id: number) => {
     setItems((prev) =>
@@ -61,7 +63,18 @@ export default function PackingPage() {
   };
 
   const categories = [...new Set(items.map((i) => i.category))];
+  if (status === "loading") {
+    return (<div>Loading..</div>)
 
+  }
+  else if (
+    status === "not-found"
+  ) {
+
+    return (<div>Trip not found<Button variant="secondary" size="md" onClick={() => router.push("/landing")}
+    >go to landing page</Button></div>);
+
+  }
   return (
     <div className="max-w-xl mx-auto p-6">
       <h1 className="text-xl font-bold mb-4">Packing Checklist 🎒</h1>
