@@ -6,8 +6,14 @@ export interface Trip {
     FlyingTo: string,
     FromDate: string,
     ToDate: string,
-    Budget: string
+    FlightNumber: string,
+    DepartureTime: string,
+    Budget: number
 }
+
+// What the trip form holds while the user is typing: <input> elements always
+// produce strings, so every field is a string until it is parsed on submit.
+export type TripFormValues = { [K in keyof Omit<Trip, "id">]: string }
 
 
 export interface TimeLineTask{

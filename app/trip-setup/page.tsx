@@ -4,25 +4,27 @@ import React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Autocomplete from "../components/Autocomplete_location";
-import { Trip } from "@/app/types"
+import { Trip, TripFormValues } from "@/app/types"
 import { saveTrip } from "@/lib/storage";
 
 
 export default function TripSetUp() {
-const [form, setForm] = useState<Omit<Trip, "id">>({
-    NumberofTravellers: 0,
-    FlyingFrom: "",
-    FlyingTo: "",
-    FromDate: "",
-    ToDate: "",
-    Budget: ""
-});
+    const [form, setForm] = useState<TripFormValues>({
+        NumberofTravellers: "1",
+        FlyingFrom: "",
+        FlyingTo: "",
+        FromDate: "",
+        ToDate: "",
+        FlightNumber: "",
+        DepartureTime: "",
+        Budget: ""
+    });
 
 
     const router = useRouter();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>
-) => {
+    ) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     }
 
@@ -34,15 +36,28 @@ const [form, setForm] = useState<Omit<Trip, "id">>({
             return;
         }
 
-        const tripId = crypto.randomUUID();
+        const travellers = Number(form.NumberofTravellers);
+        const budget = Number(form.Budget);
 
-        const trip = {
-            id: tripId,
-            ...form
+        if (!Number.isInteger(travellers) || travellers < 1) {
+            alert("Number of travellers must be a whole number of 1 or more");
+            return;
+        }
+        if (Number.isNaN(budget) || budget < 0) {
+            alert("Budget must be a number of 0 or more");
+            return;
+        }
+
+        const trip: Trip = {
+            id: crypto.randomUUID(),
+            ...form,
+            FlightNumber: form.FlightNumber.trim().toUpperCase(),
+            NumberofTravellers: travellers,
+            Budget: budget
         };
 
         saveTrip(trip)
-        router.push(`/timeline/${tripId}`);
+        router.push(`/timeline/${trip.id}`);
     };
 
     return (
@@ -58,7 +73,8 @@ const [form, setForm] = useState<Omit<Trip, "id">>({
                     <input
                         className="border p-2 rounded"
                         type="number"
-
+                        min={1}
+                        step={1}
                         name="NumberofTravellers"
                         value={form.NumberofTravellers}
                         onChange={handleChange}
@@ -84,7 +100,22 @@ const [form, setForm] = useState<Omit<Trip, "id">>({
                 />
 
                 <div className="flex flex-col">
-                    <label className="mb-1 font-medium">From Date</label>
+                    <label className="mb-1 font-medium">Flight Number</label>
+                    <input
+                        className="border p-2 rounded uppercase"
+                        type="text"
+                        name="FlightNumber"
+                        value={form.FlightNumber}
+                        onChange={handleChange}
+                        placeholder="e.g. EI123"
+                        pattern="[A-Za-z0-9]{2}\s?[0-9]{1,4}"
+                        title="Airline code followed by the flight number, e.g. EI123"
+                        required
+                    />
+                </div>
+
+                <div className="flex flex-col">
+                    <label className="mb-1 font-medium">Departure Date</label>
                     <input
                         className="border p-2 rounded"
                         type="date"
@@ -96,7 +127,19 @@ const [form, setForm] = useState<Omit<Trip, "id">>({
                 </div>
 
                 <div className="flex flex-col">
-                    <label className="mb-1 font-medium">To Date</label>
+                    <label className="mb-1 font-medium">Departure Time</label>
+                    <input
+                        className="border p-2 rounded"
+                        type="time"
+                        name="DepartureTime"
+                        value={form.DepartureTime}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+
+                <div className="flex flex-col">
+                    <label className="mb-1 font-medium">Return Date</label>
                     <input
                         className="border p-2 rounded"
                         type="date"
@@ -112,6 +155,7 @@ const [form, setForm] = useState<Omit<Trip, "id">>({
                     <label className="mb-1 font-medium">Budget</label>
                     <input
                         type="number"
+                        min={0}
                         className="border p-2 rounded"
                         name="Budget"
                         value={form.Budget}

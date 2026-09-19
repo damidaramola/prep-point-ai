@@ -1,18 +1,20 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { Trip, TravelResult } from "@/app/types"
+import { TripFormValues, TravelResult } from "@/app/types"
 
 
 export default function ResultPage() {
 
   const [result, setResult] = useState<TravelResult | null>(null);
-  const [form, setForm] = useState<Omit<Trip, "id">>({
-    NumberofTravellers: 0,
+  const [form, setForm] = useState<TripFormValues>({
+    NumberofTravellers: "",
     FlyingFrom: "",
     FlyingTo: "",
     FromDate: "",
     ToDate: "",
+    FlightNumber: "",
+    DepartureTime: "",
     Budget: ""
   });
 
