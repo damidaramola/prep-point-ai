@@ -6,6 +6,7 @@ import { useTrip } from "@/app/hooks/useTrip"
 import { PackingItem } from "@/app/types";
 import { getPackingItems, savePackingItems, setPackingComplete } from "@/lib/storage";
 import Button from "@/app/components/Button";
+import ChecklistItem from "@/app/components/ChecklistItem";
 const defaultItems: PackingItem[] = [
   { id: 1, name: "T-shirts", category: "Clothing", packed: false },
   { id: 2, name: "Pants", category: "Clothing", packed: false },
@@ -107,16 +108,12 @@ export default function PackingPage() {
             </div>
             <ul className="space-y-2">
               {categoryItems.map((item) => (
-                <li key={item.id} className="flex items-center gap-2 border p-2 rounded">
-                  <input
-                    type="checkbox"
-                    checked={item.packed}
-                    onChange={() => toggleItem(item.id)}
-                  />
-                  <span className={item.packed ? "line-through text-gray-400" : ""}>
-                    {item.name}
-                  </span>
-                </li>
+                <ChecklistItem
+                  key={item.id}
+                  label={item.name}
+                  checked={item.packed}
+                  onToggle={() => toggleItem(item.id)}
+                />
               ))}
             </ul>
           </div>

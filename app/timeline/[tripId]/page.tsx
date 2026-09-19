@@ -1,5 +1,10 @@
 "use client"
 
+import { buildTimeline, PACK_BAGS_TITLE } from "@/lib/timeline";
+import { TimeLineTask } from "@/app/types";
+import ProgressBar from "@/app/components/ProgressBar";
+import ChecklistItem from "@/app/components/ChecklistItem";
+
 import { useState } from "react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -7,21 +12,21 @@ import { saveTasks, getTasks, getPackingComplete } from "@/lib/storage";
 import { useTrip } from "@/app/hooks/useTrip";
 import Button from "@/app/components/Button";
 
-const todos = [
-    { id: 1, title: "Check passport", done: false },
-    { id: 2, title: "Book flights", done: false },
-    { id: 3, title: "Reserve accommodation", done: false },
-    { id: 4, title: "Arrange insurance", done: false },
-    { id: 5, title: "Pack bags", done: false }
-
-];
-
+function formatDue(iso: string): string {
+    return new Date(iso).toLocaleString(undefined, {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+}
 
 export default function Timeline() {
 
     const router = useRouter();
-    const {trip,status,tripId} = useTrip();
-    const [tasks, setTasks] = useState(todos);
+    const { trip, status } = useTrip();
+    const [tasks, setTasks] = useState<TimeLineTask[]>([]);
     const [tasksLoaded, setTasksLoaded] = useState(false);
 
     const toggleTask = (id: number) => {
@@ -33,100 +38,80 @@ export default function Timeline() {
         ? Math.round((tasks.filter(t => t.done).length / tasks.length) * 100)
         : 0;
 
-
-
+    // Load saved tasks, or build a fresh timeline from the flight details.
     useEffect(() => {
-        if (!tripId || typeof tripId !== "string") return;
-        const storedTasks = getTasks(tripId)
-        if (storedTasks.length> 0) {
-            setTasks(storedTasks)
-        } else {
-            setTasks(todos);
-        }
+        if (status !== "found" || !trip) return;
+
+        const stored = getTasks(trip.id);
+        // Tasks saved before due times existed have the old shape, so rebuild them.
+        const usable = stored.length > 0 && stored.every(task => typeof task.dueAt === "string");
+        const loaded = usable ? stored : buildTimeline(trip);
+
+        // The packing page records completion separately; reflect it here.
+        setTasks(
+            getPackingComplete(trip.id)
+                ? loaded.map(task => task.title === PACK_BAGS_TITLE ? { ...task, done: true } : task)
+                : loaded
+        );
         setTasksLoaded(true);
-    }, [tripId]);
+    }, [status, trip]);
 
     useEffect(() => {
-        if (!tasksLoaded || !tripId || typeof tripId !== "string") return;
-        saveTasks(tripId, tasks)
-    }, [tasks, tripId, tasksLoaded]);
+        if (!tasksLoaded || !trip) return;
+        saveTasks(trip.id, tasks)
+    }, [tasks, trip, tasksLoaded]);
 
+    if (status === "loading") {
+        return (<div>Loading..</div>)
+    }
+    if (status === "not-found" || !trip) {
+        return (
+            <div>Trip not found
+                <Button variant="secondary" size="md" onClick={() => router.push("/landing")}>
+                    go to landing page
+                </Button>
+            </div>
+        );
+    }
 
-    useEffect(() => {
-        if (!tripId || typeof tripId !== "string") return;
-
-        const isPacked = getPackingComplete(tripId)
-
-        if (isPacked === true) {
-            setTasks(prev =>
-                prev.map(task =>
-                    task.title === "Pack bags"
-                        ? { ...task, done: true }
-                        : task
-                )
-            );
-        }
-    }, [trip]
-
-
-    );
-
-if(status === "loading"){
-    return(<div>Loading..</div>)
-     
-}
-else if(
-    status ==="not-found"
-){
-    
-        return (<div>Trip not found<Button variant="secondary" size="md"  onClick={() => router.push("/landing")}
- >go to landing page</Button></div>);
-    
-}
     return (
         <div className="max-w-xl mx-auto p-6">
             <h1 className="text-xl font-semibold mb-3">Pre-Flight Checklist ✈️</h1>
             <h2 className="text-sm text-gray-600 mb-4">
-                {trip?.FlyingFrom} → {trip?.FlyingTo} | {trip?.FromDate} → {trip?.ToDate}
+                {trip.FlyingFrom} → {trip.FlyingTo} | Flight {trip.FlightNumber} | {trip.FromDate} {trip.DepartureTime}
             </h2>
-            {/* Progress bar */}
-            <div className="bg-gray-200 rounded h-3 mb-4 overflow-hidden">
-                <div className="bg-blue-500 h-full" style={{ width: `${completion}%` }} />
-            </div>
+
+            <ProgressBar progress={completion} className="mb-4" />
             <p className="text-sm mb-4">{completion}% complete</p>
 
-            <ul className="space-y-3">
-                {tasks.map(task => (
-                    <li
-                        key={task.id}
-                        className="flex items-center gap-3 border p-3 rounded cursor-pointer"
-                    >
-                        <input
-                            type="checkbox"
+            {tasksLoaded && tasks.length === 0 ? (
+                <div className="border p-4 rounded">
+                    <p className="mb-3">This trip has no departure time, so a timeline can&apos;t be built.</p>
+                    <Button variant="primary" onClick={() => router.push("/trip-setup")}>
+                        Create a new trip
+                    </Button>
+                </div>
+            ) : (
+                <ul className="space-y-3">
+                    {tasks.map(task => (
+                        <ChecklistItem
+                            key={task.id}
+                            label={task.title}
                             checked={task.done}
-                            onChange={() => toggleTask(task.id)}
-                            className="h-5 w-5"
+                            onToggle={() => toggleTask(task.id)}
+                            detail={formatDue(task.dueAt)}
                         />
-                        <span className={task.done ? "line-through text-gray-500" : ""}>
-                            {task.title}
-                        </span>
-                    </li>
-                ))}
-            </ul>
+                    ))}
+                </ul>
+            )}
 
             <div className="mt-6">
-                <button
-                    type="button"
-                    onClick={() => router.push(`/packing/${tripId}`)}
-                    className="border p-2 rounded"
-                >
-                    Lets Pack!
-                </button>
+                <Button variant="secondary" onClick={() => router.push(`/packing/${trip.id}`)}>
+                    Let&apos;s Pack!
+                </Button>
             </div>
-
 
         </div>
 
     );
 }
-

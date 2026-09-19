@@ -19,7 +19,8 @@ export type TripFormValues = { [K in keyof Omit<Trip, "id">]: string }
 export interface TimeLineTask{
     id: number,
     title: string,
-    done: boolean
+    done: boolean,
+    dueAt: string
 }
 
 
