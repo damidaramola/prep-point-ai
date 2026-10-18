@@ -6,6 +6,10 @@ import ProgressBar from "@/app/components/ProgressBar";
 import ChecklistItem from "@/app/components/ChecklistItem";
 import Card from "@/app/components/Cards";
 import Spinner from "@/app/components/Spinner";
+import PageShell, { PageHeader, BackLink } from "@/app/components/PageShell";
+import TripNotFound from "@/app/components/TripNotFound";
+import IconTile from "@/app/components/IconTile";
+import { SparklesIcon } from "@/app/components/Icons";
 
 import { useState } from "react";
 import { useEffect } from "react";
@@ -107,53 +111,61 @@ export default function Timeline() {
     }, [status, trip, tipsAttempt]);
 
     if (status === "loading") {
-        return (<Spinner className="p-6" />)
+        return (<PageShell><Spinner className="justify-center py-20" /></PageShell>)
     }
     if (status === "not-found" || !trip) {
-        return (
-            <div>Trip not found
-                <Button variant="secondary" size="md" onClick={() => router.push("/landing")}>
-                    go to landing page
-                </Button>
-            </div>
-        );
+        return <TripNotFound />;
     }
 
     return (
-        <div className="max-w-xl mx-auto p-6">
-            <h1 className="text-xl font-semibold mb-3">Pre-Flight Checklist ✈️</h1>
-            <h2 className="text-sm text-gray-600 mb-4">
-                {trip.FlyingFrom} → {trip.FlyingTo} | Flight {trip.FlightNumber} | {trip.FromDate} {trip.DepartureTime}
-            </h2>
+        <PageShell>
+            <BackLink href="/dashboard">My trips</BackLink>
+            <PageHeader
+                title={`${trip.FlyingFrom} → ${trip.FlyingTo}`}
+                subtitle={`Flight ${trip.FlightNumber} · ${trip.FromDate} at ${trip.DepartureTime}`}
+            />
 
-            <Card className="mb-6">
-                <h3 className="font-semibold mb-2">Tips for {trip.FlyingTo}</h3>
+            <Card className="grid gap-3">
+                <div className="flex items-center gap-3">
+                    <IconTile><SparklesIcon /></IconTile>
+                    <h2 className="font-semibold text-slate-900">Tips for {trip.FlyingTo}</h2>
+                </div>
                 {tipsStatus === "loading" && <Spinner label="Getting tips…" />}
                 {tipsStatus === "error" && (
-                    <div className="flex items-center gap-3">
-                        <p className="text-sm">Couldn&apos;t load tips right now.</p>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <p className="text-sm text-slate-500">Couldn&apos;t load tips right now.</p>
                         <Button size="sm" onClick={() => setTipsAttempt(n => n + 1)}>Try again</Button>
                     </div>
                 )}
                 {tipsStatus === "done" && tips && (
-                    <ul className="list-disc pl-5 space-y-1 text-sm">
-                        {tips.tips.map(tip => <li key={tip}>{tip}</li>)}
+                    <ul className="grid gap-2 text-sm text-slate-600">
+                        {tips.tips.map(tip => (
+                            <li key={tip} className="flex gap-2">
+                                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-400" aria-hidden="true" />
+                                <span>{tip}</span>
+                            </li>
+                        ))}
                     </ul>
                 )}
             </Card>
 
-            <ProgressBar progress={completion} className="mb-4" />
-            <p className="text-sm mb-4">{completion}% complete</p>
+            <Card className="grid gap-2">
+                <div className="flex items-center justify-between">
+                    <h2 className="font-semibold text-slate-900">Pre-flight checklist</h2>
+                    <span className="text-sm font-medium text-sky-600">{completion}% complete</span>
+                </div>
+                <ProgressBar progress={completion} />
+            </Card>
 
             {tasksLoaded && tasks.length === 0 ? (
-                <div className="border p-4 rounded">
-                    <p className="mb-3">This trip has no departure time, so a timeline can&apos;t be built.</p>
+                <Card className="grid gap-3 text-center">
+                    <p className="text-sm text-slate-500">This trip has no departure time, so a timeline can&apos;t be built.</p>
                     <Button variant="primary" onClick={() => router.push("/trip-setup")}>
                         Create a new trip
                     </Button>
-                </div>
+                </Card>
             ) : (
-                <ul className="space-y-3">
+                <ul className="grid gap-2">
                     {tasks.map(task => (
                         <ChecklistItem
                             key={task.id}
@@ -166,18 +178,21 @@ export default function Timeline() {
                 </ul>
             )}
 
-            <div className="mt-6">
-                {/* The packing list uses the tips' packing suggestions, so wait for them. */}
+            {completion === 100 ? (
+                <Button variant="primary" size="lg" onClick={() => router.push(`/completion/${trip.id}`)}>
+                    I&apos;m ready
+                </Button>
+            ) : (
+                /* The packing list uses the tips' packing suggestions, so wait for them. */
                 <Button
-                    variant="secondary"
+                    variant="primary"
+                    size="lg"
                     disabled={tipsStatus === "loading"}
                     onClick={() => router.push(`/packing/${trip.id}`)}
                 >
-                    Let&apos;s Pack!
+                    Let&apos;s pack
                 </Button>
-            </div>
-
-        </div>
-
+            )}
+        </PageShell>
     );
 }

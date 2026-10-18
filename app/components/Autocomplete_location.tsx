@@ -1,6 +1,7 @@
 "use client"
 
 import {useState} from "react";
+import FormField, { inputClass } from "./FormField";
 
 
 const cities = [
@@ -14,12 +15,13 @@ const cities = [
 ];
 
 type Props = {
+  id: string;
   label: string;
   value: string;
   onChangeAction: (value: string) => void;
 };
 
-export default function Autocomplete({ label, value, onChangeAction }: Props) {
+export default function Autocomplete({ id, label, value, onChangeAction }: Props) {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -47,26 +49,27 @@ export default function Autocomplete({ label, value, onChangeAction }: Props) {
   };
 
   return (
-    <div className="flex flex-col relative">
-      <label className="mb-1 font-medium">{label}</label>
-
-      <input
-        className="border p-2 rounded"
-        value={value}
-        onChange={handleInputChange}
-        onFocus={() => setShowDropdown(true)}
-        placeholder="e.g City, Country"
-        required
-
-      />
+    <div className="relative">
+      <FormField id={id} label={label}>
+        <input
+          id={id}
+          className={inputClass}
+          value={value}
+          onChange={handleInputChange}
+          onFocus={() => setShowDropdown(true)}
+          placeholder="e.g. City, Country"
+          autoComplete="off"
+          required
+        />
+      </FormField>
 
       {showDropdown && suggestions.length > 0 && (
-        <ul className="absolute top-full left-0 w-full bg-white border rounded shadow mt-1 z-10 max-h-40 overflow-y-auto">
+        <ul className="absolute top-full left-0 z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
           {suggestions.map((city) => (
             <li
               key={city}
               onClick={() => handleSelect(city)}
-              className="p-2 hover:bg-blue-100 cursor-pointer"
+              className="cursor-pointer px-3 py-2 text-sm text-slate-700 hover:bg-sky-50"
             >
               {city}
             </li>
@@ -76,4 +79,3 @@ export default function Autocomplete({ label, value, onChangeAction }: Props) {
     </div>
   );
 }
-

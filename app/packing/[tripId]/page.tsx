@@ -9,6 +9,10 @@ import Button from "@/app/components/Button";
 import ChecklistItem from "@/app/components/ChecklistItem";
 import ProgressBar from "@/app/components/ProgressBar";
 import Spinner from "@/app/components/Spinner";
+import Card from "@/app/components/Cards";
+import PageShell, { PageHeader, BackLink } from "@/app/components/PageShell";
+import TripNotFound from "@/app/components/TripNotFound";
+import { LuggageIcon } from "@/app/components/Icons";
 
 const defaultItems: PackingItem[] = [
   { id: 1, name: "T-shirts", category: "Clothing", packed: false },
@@ -68,58 +72,57 @@ export default function PackingPage() {
 
   const categories = [...new Set(items.map((i) => i.category))];
   if (status === "loading") {
-    return (<Spinner className="p-6" />)
-
+    return (<PageShell><Spinner className="justify-center py-20" /></PageShell>)
   }
-  else if (
-    status === "not-found"
-  ) {
-
-    return (<div>Trip not found<Button variant="secondary" size="md" onClick={() => router.push("/landing")}
-    >go to landing page</Button></div>);
-
+  if (status === "not-found") {
+    return <TripNotFound />;
   }
   return (
-    <div className="max-w-xl mx-auto p-6">
-      <h1 className="text-xl font-bold mb-4">Packing Checklist 🎒</h1>
+    <PageShell>
+      <BackLink href={`/timeline/${tripId}`}>Back to timeline</BackLink>
+      <PageHeader
+        title="Packing Checklist"
+        subtitle={isComplete ? "All packed. You're ready to go!" : `${packed} of ${total} items packed`}
+        icon={<LuggageIcon className="h-6 w-6" />}
+      />
 
-      <button
-        type="button"
-        onClick={() => router.push(`/timeline/${tripId}`)}
-        className="mb-4 border p-2 rounded text-sm"
-      >
-        ← Back to Timeline
-      </button>
-
-      <div className="mb-6">
-        <ProgressBar progress={overallProgress} />
-        <p className="text-sm mt-1">{overallProgress}% packed</p>
-      </div>
-
-      {
-    categories.map((category) => {
-      const categoryItems = items.filter((i) => i.category === category);
-      const done = categoryItems.filter((i) => i.packed).length;
-      const percent = Math.round((done / categoryItems.length) * 100);
-
-      return (
-        <div key={category} className="mb-6">
-          <h2 className="font-semibold mb-2">{category}</h2>
-          <ProgressBar progress={percent} className="mb-3" />
-          <ul className="space-y-2">
-            {categoryItems.map((item) => (
-              <ChecklistItem
-                key={item.id}
-                label={item.name}
-                checked={item.packed}
-                onToggle={() => toggleItem(item.id)}
-              />
-            ))}
-          </ul>
+      <Card className="grid gap-2">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold text-slate-900">Overall</h2>
+          <span className="text-sm font-medium text-sky-600">{overallProgress}% packed</span>
         </div>
-      );
-    })
-  }
-    </div >
+        <ProgressBar progress={overallProgress} />
+      </Card>
+
+      {categories.map((category) => {
+        const categoryItems = items.filter((i) => i.category === category);
+        const done = categoryItems.filter((i) => i.packed).length;
+        const percent = Math.round((done / categoryItems.length) * 100);
+
+        return (
+          <section key={category} className="grid gap-3">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-slate-900">{category}</h2>
+              <span className="text-xs text-slate-500">{done}/{categoryItems.length}</span>
+            </div>
+            <ProgressBar progress={percent} />
+            <ul className="grid gap-2">
+              {categoryItems.map((item) => (
+                <ChecklistItem
+                  key={item.id}
+                  label={item.name}
+                  checked={item.packed}
+                  onToggle={() => toggleItem(item.id)}
+                />
+              ))}
+            </ul>
+          </section>
+        );
+      })}
+
+      <Button variant="primary" size="lg" onClick={() => router.push("/dashboard")}>
+        Go to my trips
+      </Button>
+    </PageShell>
   );
 }
