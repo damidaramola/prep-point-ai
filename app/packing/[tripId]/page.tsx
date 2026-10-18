@@ -7,6 +7,7 @@ import { PackingItem } from "@/app/types";
 import { getPackingItems, savePackingItems, setPackingComplete } from "@/lib/storage";
 import Button from "@/app/components/Button";
 import ChecklistItem from "@/app/components/ChecklistItem";
+import ProgressBar from "@/app/components/ProgressBar";
 const defaultItems: PackingItem[] = [
   { id: 1, name: "T-shirts", category: "Clothing", packed: false },
   { id: 2, name: "Pants", category: "Clothing", packed: false },
@@ -28,7 +29,7 @@ export default function PackingPage() {
 
   // Load from localStorage using backtick template literal
   useEffect(() => {
-    if (!tripId ||status !== "found"|| typeof tripId !== "string") return;
+    if (!tripId || status !== "found" || typeof tripId !== "string") return;
     const storedItems = getPackingItems(tripId);
     if (storedItems.length > 0) {
       setItems(storedItems)
@@ -40,7 +41,7 @@ export default function PackingPage() {
   }, [tripId, status]);
 
   useEffect(() => {
-    if (!itemsLoaded || status !== "found"|| !tripId || typeof tripId !== "string") return;
+    if (!itemsLoaded || status !== "found" || !tripId || typeof tripId !== "string") return;
     savePackingItems(tripId, items)
   }, [items, tripId, itemsLoaded, status]);
 
@@ -51,9 +52,9 @@ export default function PackingPage() {
   const isComplete = overallProgress === 100;
 
   useEffect(() => {
-    if (!itemsLoaded ||status !== "found"|| !tripId || typeof tripId !== "string") return;
+    if (!itemsLoaded || status !== "found" || !tripId || typeof tripId !== "string") return;
     setPackingComplete(tripId, isComplete);
-  }, [isComplete, tripId,status]);
+  }, [isComplete, tripId, status,itemsLoaded]);
 
   const toggleItem = (id: number) => {
     setItems((prev) =>
@@ -89,36 +90,34 @@ export default function PackingPage() {
       </button>
 
       <div className="mb-6">
-        <div className="bg-gray-200 h-3 rounded overflow-hidden">
-          <div className="bg-green-500 h-full" style={{ width: `${overallProgress}%` }} />
-        </div>
+        <ProgressBar progress={overallProgress} />
         <p className="text-sm mt-1">{overallProgress}% packed</p>
       </div>
 
-      {categories.map((category) => {
-        const categoryItems = items.filter((i) => i.category === category);
-        const done = categoryItems.filter((i) => i.packed).length;
-        const percent = Math.round((done / categoryItems.length) * 100);
+      {
+    categories.map((category) => {
+      const categoryItems = items.filter((i) => i.category === category);
+      const done = categoryItems.filter((i) => i.packed).length;
+      const percent = Math.round((done / categoryItems.length) * 100);
 
-        return (
-          <div key={category} className="mb-6">
-            <h2 className="font-semibold mb-2">{category}</h2>
-            <div className="bg-gray-100 h-2 rounded mb-3 overflow-hidden">
-              <div className="bg-blue-400 h-full" style={{ width: `${percent}%` }} />
-            </div>
-            <ul className="space-y-2">
-              {categoryItems.map((item) => (
-                <ChecklistItem
-                  key={item.id}
-                  label={item.name}
-                  checked={item.packed}
-                  onToggle={() => toggleItem(item.id)}
-                />
-              ))}
-            </ul>
-          </div>
-        );
-      })}
-    </div>
+      return (
+        <div key={category} className="mb-6">
+          <h2 className="font-semibold mb-2">{category}</h2>
+          <ProgressBar progress={percent} className="mb-3" />
+          <ul className="space-y-2">
+            {categoryItems.map((item) => (
+              <ChecklistItem
+                key={item.id}
+                label={item.name}
+                checked={item.packed}
+                onToggle={() => toggleItem(item.id)}
+              />
+            ))}
+          </ul>
+        </div>
+      );
+    })
+  }
+    </div >
   );
 }

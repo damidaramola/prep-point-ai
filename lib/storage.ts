@@ -55,9 +55,14 @@ export function getAllTrips(): Trip[] {
 
             }
 
-            const trip = JSON.parse(value) as Trip
+            try {
+                const trip = JSON.parse(value) as Trip
+                trips.push(trip)
+            } catch {
+                console.error(`Failed to parse trip data for trip ${key}`)
+                continue
+            }
 
-            trips.push(trip)
         }
 
     }
@@ -119,7 +124,11 @@ export function saveTasks(tripId: string, tasks: TimeLineTask[]): void {
 
 export function getPackingComplete(tripId: string): boolean {
     const isPacked = localStorage.getItem(`packingComplete-${tripId}`)
-    return JSON.parse(isPacked ?? "false")  as boolean
+    try { return JSON.parse(isPacked ?? "false") as boolean }
+    catch {
+        console.error(`Could not parse ${isPacked}`)
+        return false
+    }
 }
 
 export function setPackingComplete(tripId: string, value: boolean): void {
