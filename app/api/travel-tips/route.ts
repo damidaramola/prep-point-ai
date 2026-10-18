@@ -1,7 +1,12 @@
 import { model } from "@/lib/gemini";
-import { Trip } from "@/app/types";
+import { Trip, TripFormValues } from "@/app/types";
+import { validateTrip } from "@/lib/validateTrip";
+import { findCountry } from "@/lib/countries";
 
 const CATEGORIES = ["Clothing", "Toiletries", "Documents", "Electronics"];
+const FORM_FIELDS: (keyof TripFormValues)[] = [
+    "numberOfTravellers", "flyingFrom", "flyingTo", "fromDate", "toDate", "flightNumber", "departureTime", "budget",
+];
 
 export async function POST(req: Request) {
     let trip: Trip;
@@ -11,18 +16,22 @@ export async function POST(req: Request) {
         return Response.json({ error: "Request body must be a trip" }, { status: 400 });
     }
 
-    if (!trip?.FlyingTo || !trip.FromDate || !trip.ToDate) {
-        return Response.json({ error: "Trip is missing destination or dates" }, { status: 400 });
+    const values = Object.fromEntries(
+        FORM_FIELDS.map(field => [field, String(trip?.[field] ?? "")])
+    ) as TripFormValues;
+    const errors = validateTrip(values, { now: new Date(), checkDates: false });
+    if (Object.keys(errors).length > 0) {
+        return Response.json({ error: "Invalid trip", fields: errors }, { status: 400 });
     }
 
     const prompt = `
     You are a travel assistant helping someone prepare for a flight.
 
     Trip:
-    - Flying from: ${trip.FlyingFrom}
-    - Flying to: ${trip.FlyingTo}
-    - Dates: ${trip.FromDate} to ${trip.ToDate}
-    - Number of travellers: ${trip.NumberofTravellers}
+    - Flying from: ${findCountry(values.flyingFrom)}
+    - Flying to: ${findCountry(values.flyingTo)}
+    - Dates: ${trip.fromDate} to ${trip.toDate}
+    - Number of travellers: ${trip.numberOfTravellers}
 
     Give:
     1. 3 to 5 short, practical tips for this destination, based on the typical weather there at that time of year.

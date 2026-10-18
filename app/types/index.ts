@@ -1,14 +1,14 @@
 
 export interface Trip {
     id: string,
-    NumberofTravellers: number,
-    FlyingFrom: string,
-    FlyingTo: string,
-    FromDate: string,
-    ToDate: string,
-    FlightNumber: string,
-    DepartureTime: string,
-    Budget: number
+    numberOfTravellers: number,
+    flyingFrom: string,
+    flyingTo: string,
+    fromDate: string,
+    toDate: string,
+    flightNumber: string,
+    departureTime: string,
+    budget: number
 }
 
 // What the trip form holds while the user is typing: <input> elements always

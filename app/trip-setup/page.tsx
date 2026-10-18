@@ -6,58 +6,55 @@ import { useRouter } from "next/navigation"
 import Autocomplete from "../components/Autocomplete_location";
 import { Trip, TripFormValues } from "@/app/types"
 import { saveTrip } from "@/lib/storage";
+import { findCountry } from "@/lib/countries";
+import { validateTrip, normalizeFlightNumber, TripErrors } from "@/lib/validateTrip";
 import PageShell, { PageHeader, BackLink } from "../components/PageShell";
 import Card from "../components/Cards";
 import Button from "../components/Button";
-import FormField, { inputClass } from "../components/FormField";
+import FormField, { inputProps } from "../components/FormField";
 
 
 export default function TripSetUp() {
     const [form, setForm] = useState<TripFormValues>({
-        NumberofTravellers: "1",
-        FlyingFrom: "",
-        FlyingTo: "",
-        FromDate: "",
-        ToDate: "",
-        FlightNumber: "",
-        DepartureTime: "",
-        Budget: ""
+        numberOfTravellers: "1",
+        flyingFrom: "",
+        flyingTo: "",
+        fromDate: "",
+        toDate: "",
+        flightNumber: "",
+        departureTime: "",
+        budget: ""
     });
-
+    const [errors, setErrors] = useState<TripErrors>({});
+    const [submitted, setSubmitted] = useState(false);
 
     const router = useRouter();
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>
-    ) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
+    const update = (next: TripFormValues) => {
+        setForm(next);
+        if (submitted) setErrors(validateTrip(next, { now: new Date() }));
+    }
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        update({ ...form, [e.target.name]: e.target.value });
     }
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setSubmitted(true);
 
-        if (form.ToDate < form.FromDate) {
-            alert("Return date must not be before departure date");
-            return;
-        }
-
-        const travellers = Number(form.NumberofTravellers);
-        const budget = Number(form.Budget);
-
-        if (!Number.isInteger(travellers) || travellers < 1) {
-            alert("Number of travellers must be a whole number of 1 or more");
-            return;
-        }
-        if (Number.isNaN(budget) || budget < 0) {
-            alert("Budget must be a number of 0 or more");
-            return;
-        }
+        const found = validateTrip(form, { now: new Date() });
+        setErrors(found);
+        if (Object.keys(found).length > 0) return;
 
         const trip: Trip = {
             id: crypto.randomUUID(),
             ...form,
-            FlightNumber: form.FlightNumber.trim().toUpperCase(),
-            NumberofTravellers: travellers,
-            Budget: budget
+            flyingFrom: findCountry(form.flyingFrom)!,
+            flyingTo: findCountry(form.flyingTo)!,
+            flightNumber: normalizeFlightNumber(form.flightNumber),
+            numberOfTravellers: Number(form.numberOfTravellers),
+            budget: Number(form.budget)
         };
 
         saveTrip(trip)
@@ -70,103 +67,85 @@ export default function TripSetUp() {
             <PageHeader title="Add Your Flight" subtitle="Enter your flight details and we'll build your prep timeline." />
 
             <Card>
-                <form onSubmit={handleSubmit} className="grid gap-5">
+                <form onSubmit={handleSubmit} noValidate className="grid gap-5">
                     <div className="grid gap-4 sm:grid-cols-2">
                         <Autocomplete
-                            id="FlyingFrom"
+                            id="flyingFrom"
                             label="Flying from"
-                            value={form.FlyingFrom}
-                            onChangeAction={(value) =>
-                                setForm({ ...form, FlyingFrom: value })
-                            }
+                            value={form.flyingFrom}
+                            error={errors.flyingFrom}
+                            onChangeAction={(value) => update({ ...form, flyingFrom: value })}
                         />
                         <Autocomplete
-                            id="FlyingTo"
+                            id="flyingTo"
                             label="Flying to"
-                            value={form.FlyingTo}
-                            onChangeAction={(value) =>
-                                setForm({ ...form, FlyingTo: value })
-                            }
+                            value={form.flyingTo}
+                            error={errors.flyingTo}
+                            onChangeAction={(value) => update({ ...form, flyingTo: value })}
                         />
                     </div>
 
-                    <FormField id="FlightNumber" label="Flight number">
+                    <FormField id="flightNumber" label="Flight number" error={errors.flightNumber}>
                         <input
-                            id="FlightNumber"
-                            className={`${inputClass} uppercase`}
+                            {...inputProps("flightNumber", errors.flightNumber)}
                             type="text"
-                            name="FlightNumber"
-                            value={form.FlightNumber}
+                            value={form.flightNumber}
                             onChange={handleChange}
                             placeholder="e.g. EI123"
-                            pattern="[A-Za-z0-9]{2}\s?[0-9]{1,4}"
-                            title="Airline code followed by the flight number, e.g. EI123"
-                            required
+                            maxLength={8}
+                            autoCapitalize="characters"
                         />
                     </FormField>
 
                     <div className="grid gap-4 sm:grid-cols-2">
-                        <FormField id="FromDate" label="Departure date">
+                        <FormField id="fromDate" label="Departure date" error={errors.fromDate}>
                             <input
-                                id="FromDate"
-                                className={inputClass}
+                                {...inputProps("fromDate", errors.fromDate)}
                                 type="date"
-                                name="FromDate"
-                                value={form.FromDate}
+                                value={form.fromDate}
                                 onChange={handleChange}
-                                required
                             />
                         </FormField>
-                        <FormField id="DepartureTime" label="Departure time">
+                        <FormField id="departureTime" label="Departure time" error={errors.departureTime}>
                             <input
-                                id="DepartureTime"
-                                className={inputClass}
+                                {...inputProps("departureTime", errors.departureTime)}
                                 type="time"
-                                name="DepartureTime"
-                                value={form.DepartureTime}
+                                value={form.departureTime}
                                 onChange={handleChange}
-                                required
                             />
                         </FormField>
                     </div>
 
-                    <FormField id="ToDate" label="Return date">
+                    <FormField id="toDate" label="Return date" error={errors.toDate}>
                         <input
-                            id="ToDate"
-                            className={inputClass}
+                            {...inputProps("toDate", errors.toDate)}
                             type="date"
-                            name="ToDate"
-                            value={form.ToDate}
+                            value={form.toDate}
                             onChange={handleChange}
-                            required
-                            min={form.FromDate}
+                            min={form.fromDate}
                         />
                     </FormField>
 
                     <div className="grid gap-4 sm:grid-cols-2">
-                        <FormField id="NumberofTravellers" label="Travellers">
+                        <FormField id="numberOfTravellers" label="Travellers" error={errors.numberOfTravellers}>
                             <input
-                                id="NumberofTravellers"
-                                className={inputClass}
+                                {...inputProps("numberOfTravellers", errors.numberOfTravellers)}
                                 type="number"
+                                inputMode="numeric"
                                 min={1}
                                 step={1}
-                                name="NumberofTravellers"
-                                value={form.NumberofTravellers}
+                                value={form.numberOfTravellers}
                                 onChange={handleChange}
-                                required
                             />
                         </FormField>
-                        <FormField id="Budget" label="Budget">
+                        <FormField id="budget" label="Budget" error={errors.budget}>
                             <input
-                                id="Budget"
-                                className={inputClass}
-                                type="number"
-                                min={0}
-                                name="Budget"
-                                value={form.Budget}
+                                {...inputProps("budget", errors.budget)}
+                                type="text"
+                                inputMode="decimal"
+                                placeholder="e.g. 1500"
+                                value={form.budget}
                                 onChange={handleChange}
-                                required
                             />
                         </FormField>
                     </div>

@@ -35,7 +35,7 @@ export default function CompletionPage() {
         <PageShell width="sm">
             <BackLink href={`/timeline/${trip.id}`}>Back to timeline</BackLink>
             <PageHeader
-                title={ready ? `You're ready for ${trip.FlyingTo}!` : "Almost there"}
+                title={ready ? `You're ready for ${trip.flyingTo}!` : "Almost there"}
                 subtitle={ready
                     ? "Every task is done and your bags are packed. Have a great trip."
                     : "You've finished your timeline, but a few things are still unchecked."}
@@ -53,13 +53,13 @@ export default function CompletionPage() {
 
                 <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 border-t border-slate-100 pt-4 text-sm">
                     <dt className="text-slate-500">Route</dt>
-                    <dd className="font-medium">{trip.FlyingFrom} → {trip.FlyingTo}</dd>
+                    <dd className="font-medium">{trip.flyingFrom} → {trip.flyingTo}</dd>
                     <dt className="text-slate-500">Flight</dt>
-                    <dd className="font-medium">{trip.FlightNumber}</dd>
+                    <dd className="font-medium">{trip.flightNumber}</dd>
                     <dt className="text-slate-500">Departs</dt>
-                    <dd className="font-medium">{trip.FromDate} at {trip.DepartureTime}</dd>
+                    <dd className="font-medium">{trip.fromDate} at {trip.departureTime}</dd>
                     <dt className="text-slate-500">Returns</dt>
-                    <dd className="font-medium">{trip.ToDate}</dd>
+                    <dd className="font-medium">{trip.toDate}</dd>
                 </dl>
             </Card>
 

@@ -121,14 +121,14 @@ export default function Timeline() {
         <PageShell>
             <BackLink href="/dashboard">My trips</BackLink>
             <PageHeader
-                title={`${trip.FlyingFrom} → ${trip.FlyingTo}`}
-                subtitle={`Flight ${trip.FlightNumber} · ${trip.FromDate} at ${trip.DepartureTime}`}
+                title={`${trip.flyingFrom} → ${trip.flyingTo}`}
+                subtitle={`Flight ${trip.flightNumber} · ${trip.fromDate} at ${trip.departureTime}`}
             />
 
             <Card className="grid gap-3">
                 <div className="flex items-center gap-3">
                     <IconTile><SparklesIcon /></IconTile>
-                    <h2 className="font-semibold text-slate-900">Tips for {trip.FlyingTo}</h2>
+                    <h2 className="font-semibold text-slate-900">Tips for {trip.flyingTo}</h2>
                 </div>
                 {tipsStatus === "loading" && <Spinner label="Getting tips…" />}
                 {tipsStatus === "error" && (

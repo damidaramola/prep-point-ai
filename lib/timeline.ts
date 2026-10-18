@@ -23,14 +23,14 @@ export const DEFAULT_BUFFERS: TimeLineBuffers = {
 const MINUTE = 60_000
 const HOUR = 60 * MINUTE
 
-export function getDepatureDateTime(trip: Trip): Date | null {
-    const depatureDate = new Date(`${trip.FromDate}T${trip.DepartureTime}`)
+export function getDepartureDateTime(trip: Trip): Date | null {
+    const depatureDate = new Date(`${trip.fromDate}T${trip.departureTime}`)
     return Number.isNaN(depatureDate.getTime()) ? null : depatureDate
 
 }
 
 export function buildTimeline(trip: Trip, buffers: TimeLineBuffers = DEFAULT_BUFFERS): TimeLineTask[] {
-    const departure = getDepatureDateTime(trip)
+    const departure = getDepartureDateTime(trip)
     if (!departure) return []
 
     const departureMs = departure.getTime()

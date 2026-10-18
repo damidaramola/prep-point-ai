@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Trip } from "@/app/types";
 import { getAllTrips, getPackingItems, deleteTrip } from "@/lib/storage";
 import { getConfidence } from "@/lib/confidence";
-import { getDepatureDateTime } from "@/lib/timeline";
+import { getDepartureDateTime } from "@/lib/timeline";
 import Button from "@/app/components/Button";
 import Card from "@/app/components/Cards";
 import ProgressBar from "@/app/components/ProgressBar";
@@ -41,7 +41,7 @@ function departsIn(departure: Date, now: number): string {
 
 function loadSummaries(): TripSummary[] {
     return getAllTrips()
-        .map(trip => ({ trip, confidence: getConfidence(trip.id), departure: getDepatureDateTime(trip) }))
+        .map(trip => ({ trip, confidence: getConfidence(trip.id), departure: getDepartureDateTime(trip) }))
         .sort((a, b) => (a.departure?.getTime() ?? Infinity) - (b.departure?.getTime() ?? Infinity));
 }
 
@@ -140,10 +140,10 @@ export default function Dashboard() {
                                 <IconTile><PlaneIcon /></IconTile>
                                 <span className="grid gap-2 flex-1 min-w-0">
                                     <span className="flex flex-wrap items-baseline justify-between gap-x-3">
-                                        <span className="font-semibold text-slate-900">{trip.FlyingFrom} → {trip.FlyingTo}</span>
+                                        <span className="font-semibold text-slate-900">{trip.flyingFrom} → {trip.flyingTo}</span>
                                         <span className="text-xs font-medium text-sky-600">{confidence}% ready</span>
                                     </span>
-                                    <span className="text-sm text-slate-500">{formatDate(trip.FromDate)} · Flight {trip.FlightNumber}</span>
+                                    <span className="text-sm text-slate-500">{formatDate(trip.fromDate)} · Flight {trip.flightNumber}</span>
                                     <ProgressBar progress={confidence} />
                                 </span>
                             </button>
@@ -153,22 +153,22 @@ export default function Dashboard() {
                                 <div className="flex items-start justify-between gap-3">
                                     <div>
                                         <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Trip details</p>
-                                        <h2 className="text-xl font-bold text-slate-900">{selected.trip.FlyingFrom} → {selected.trip.FlyingTo}</h2>
+                                        <h2 className="text-xl font-bold text-slate-900">{selected.trip.flyingFrom} → {selected.trip.flyingTo}</h2>
                                     </div>
                                     <Button size="sm" onClick={() => setSelectedId(null)}>Close</Button>
                                 </div>
 
                                 <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 text-sm">
                                     <dt className="text-slate-500">Flight</dt>
-                                    <dd className="font-medium">{selected.trip.FlightNumber}</dd>
+                                    <dd className="font-medium">{selected.trip.flightNumber}</dd>
                                     <dt className="text-slate-500">Departure</dt>
-                                    <dd className="font-medium">{formatDate(selected.trip.FromDate)} at {selected.trip.DepartureTime}</dd>
+                                    <dd className="font-medium">{formatDate(selected.trip.fromDate)} at {selected.trip.departureTime}</dd>
                                     <dt className="text-slate-500">Return</dt>
-                                    <dd className="font-medium">{formatDate(selected.trip.ToDate)}</dd>
+                                    <dd className="font-medium">{formatDate(selected.trip.toDate)}</dd>
                                     <dt className="text-slate-500">Travellers</dt>
-                                    <dd className="font-medium">{selected.trip.NumberofTravellers}</dd>
+                                    <dd className="font-medium">{selected.trip.numberOfTravellers}</dd>
                                     <dt className="text-slate-500">Budget</dt>
-                                    <dd className="font-medium">{selected.trip.Budget}</dd>
+                                    <dd className="font-medium">{selected.trip.budget}</dd>
                                 </dl>
 
                                 <div className="flex flex-wrap gap-2">
@@ -210,8 +210,8 @@ export default function Dashboard() {
                             </div>
                             {upcoming && upcoming.departure ? (
                                 <>
-                                    <p className="text-lg font-bold text-slate-900">{upcoming.trip.FlyingTo}</p>
-                                    <p className="text-sm text-slate-500">{departsIn(upcoming.departure, now)} · Flight {upcoming.trip.FlightNumber}</p>
+                                    <p className="text-lg font-bold text-slate-900">{upcoming.trip.flyingTo}</p>
+                                    <p className="text-sm text-slate-500">{departsIn(upcoming.departure, now)} · Flight {upcoming.trip.flightNumber}</p>
                                     <ProgressBar progress={upcoming.confidence} />
                                     <p className="text-xs text-slate-500">{upcoming.confidence}% ready</p>
                                 </>
