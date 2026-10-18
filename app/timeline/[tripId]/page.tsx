@@ -1,14 +1,16 @@
 "use client"
 
 import { buildTimeline, PACK_BAGS_TITLE } from "@/lib/timeline";
-import { TimeLineTask } from "@/app/types";
+import { TimeLineTask, TravelTips } from "@/app/types";
 import ProgressBar from "@/app/components/ProgressBar";
 import ChecklistItem from "@/app/components/ChecklistItem";
+import Card from "@/app/components/Cards";
+import Spinner from "@/app/components/Spinner";
 
 import { useState } from "react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { saveTasks, getTasks, getPackingComplete } from "@/lib/storage";
+import { saveTasks, getTasks, getPackingComplete, getTips, saveTips } from "@/lib/storage";
 import { useTrip } from "@/app/hooks/useTrip";
 import Button from "@/app/components/Button";
 
@@ -28,6 +30,10 @@ export default function Timeline() {
     const { trip, status } = useTrip();
     const [tasks, setTasks] = useState<TimeLineTask[]>([]);
     const [tasksLoaded, setTasksLoaded] = useState(false);
+    const [tips, setTips] = useState<TravelTips | null>(null);
+    const [tipsStatus, setTipsStatus] = useState<"loading" | "done" | "error">("loading");
+    // Bumping this re-runs the tips effect, which is how the retry button works.
+    const [tipsAttempt, setTipsAttempt] = useState(0);
 
     const toggleTask = (id: number) => {
         setTasks(prev =>
@@ -61,8 +67,47 @@ export default function Timeline() {
         saveTasks(trip.id, tasks)
     }, [tasks, trip, tasksLoaded]);
 
+    // Use cached tips if we have them; otherwise ask the API once and cache the result.
+    useEffect(() => {
+        if (status !== "found" || !trip) return;
+
+        const cached = getTips(trip.id);
+        if (cached) {
+            setTips(cached);
+            setTipsStatus("done");
+            return;
+        }
+
+        let cancelled = false;
+        setTipsStatus("loading");
+
+        async function loadTips(currentTrip: NonNullable<typeof trip>) {
+            try {
+                const res = await fetch("/api/travel-tips", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(currentTrip),
+                });
+                if (!res.ok) throw new Error(`Request failed with ${res.status}`);
+
+                const data: TravelTips = await res.json();
+                if (cancelled) return;
+                saveTips(currentTrip.id, data);
+                setTips(data);
+                setTipsStatus("done");
+            } catch (error) {
+                console.error("Could not load travel tips", error);
+                if (!cancelled) setTipsStatus("error");
+            }
+        }
+        loadTips(trip);
+
+        // If the trip changes or the page closes before the response arrives, ignore it.
+        return () => { cancelled = true };
+    }, [status, trip, tipsAttempt]);
+
     if (status === "loading") {
-        return (<div>Loading..</div>)
+        return (<Spinner className="p-6" />)
     }
     if (status === "not-found" || !trip) {
         return (
@@ -80,6 +125,22 @@ export default function Timeline() {
             <h2 className="text-sm text-gray-600 mb-4">
                 {trip.FlyingFrom} → {trip.FlyingTo} | Flight {trip.FlightNumber} | {trip.FromDate} {trip.DepartureTime}
             </h2>
+
+            <Card className="mb-6">
+                <h3 className="font-semibold mb-2">Tips for {trip.FlyingTo}</h3>
+                {tipsStatus === "loading" && <Spinner label="Getting tips…" />}
+                {tipsStatus === "error" && (
+                    <div className="flex items-center gap-3">
+                        <p className="text-sm">Couldn&apos;t load tips right now.</p>
+                        <Button size="sm" onClick={() => setTipsAttempt(n => n + 1)}>Try again</Button>
+                    </div>
+                )}
+                {tipsStatus === "done" && tips && (
+                    <ul className="list-disc pl-5 space-y-1 text-sm">
+                        {tips.tips.map(tip => <li key={tip}>{tip}</li>)}
+                    </ul>
+                )}
+            </Card>
 
             <ProgressBar progress={completion} className="mb-4" />
             <p className="text-sm mb-4">{completion}% complete</p>
@@ -106,7 +167,12 @@ export default function Timeline() {
             )}
 
             <div className="mt-6">
-                <Button variant="secondary" onClick={() => router.push(`/packing/${trip.id}`)}>
+                {/* The packing list uses the tips' packing suggestions, so wait for them. */}
+                <Button
+                    variant="secondary"
+                    disabled={tipsStatus === "loading"}
+                    onClick={() => router.push(`/packing/${trip.id}`)}
+                >
                     Let&apos;s Pack!
                 </Button>
             </div>

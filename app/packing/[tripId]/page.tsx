@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTrip } from "@/app/hooks/useTrip"
 import { PackingItem } from "@/app/types";
-import { getPackingItems, savePackingItems, setPackingComplete } from "@/lib/storage";
+import { getPackingItems, savePackingItems, setPackingComplete, getTips } from "@/lib/storage";
 import Button from "@/app/components/Button";
 import ChecklistItem from "@/app/components/ChecklistItem";
 import ProgressBar from "@/app/components/ProgressBar";
+import Spinner from "@/app/components/Spinner";
+
 const defaultItems: PackingItem[] = [
   { id: 1, name: "T-shirts", category: "Clothing", packed: false },
   { id: 2, name: "Pants", category: "Clothing", packed: false },
@@ -27,16 +29,16 @@ export default function PackingPage() {
   const [items, setItems] = useState<PackingItem[]>([]);
   const [itemsLoaded, setItemsLoaded] = useState(false);
 
-  // Load from localStorage using backtick template literal
   useEffect(() => {
     if (!tripId || status !== "found" || typeof tripId !== "string") return;
     const storedItems = getPackingItems(tripId);
-    if (storedItems.length > 0) {
-      setItems(storedItems)
-    }
-    else {
-      setItems(defaultItems);
-    }
+    const suggested = getTips(tripId)?.packingItems ?? [];
+
+    const loaded: PackingItem[] =
+      storedItems.length > 0 ? storedItems
+        : suggested.length > 0 ? suggested.map((item, i) => ({ id: i + 1, ...item, packed: false }))
+          : defaultItems;
+    setItems(loaded);
     setItemsLoaded(true);
   }, [tripId, status]);
 
@@ -66,7 +68,7 @@ export default function PackingPage() {
 
   const categories = [...new Set(items.map((i) => i.category))];
   if (status === "loading") {
-    return (<div>Loading..</div>)
+    return (<Spinner className="p-6" />)
 
   }
   else if (

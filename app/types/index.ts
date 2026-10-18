@@ -32,6 +32,10 @@ export interface PackingItem {
 }
 
 
+export interface TravelTips {
+    tips: string[],
+    packingItems: { name: string, category: string }[]
+}
 
 export interface TravelResult {
   trip: string,
@@ -40,7 +44,3 @@ export interface TravelResult {
   hotel: string
 };
 
-//define flight Details Later
-// export interface FlightDetails{
-
-// }

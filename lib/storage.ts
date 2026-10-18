@@ -1,4 +1,4 @@
-import { Trip, PackingItem, TimeLineTask } from "@/app/types"
+import { Trip, PackingItem, TimeLineTask, TravelTips } from "@/app/types"
 
 
 export function getTrip(tripId: string): Trip | null {
@@ -33,6 +33,7 @@ export function deleteTrip(tripId: string): void {
         localStorage.removeItem(`tasks-${tripId}`)
         localStorage.removeItem(`packing-${tripId}`)
         localStorage.removeItem(`packingComplete-${tripId}`)
+        localStorage.removeItem(`tips-${tripId}`)
     } catch (error) {
         console.error("Failed to delete trip", error)
     }
@@ -136,5 +137,28 @@ export function setPackingComplete(tripId: string, value: boolean): void {
         localStorage.setItem(`packingComplete-${tripId}`, JSON.stringify(value))
     } catch (error) {
         console.error('Failed to save result', error)
+    }
+}
+
+export function getTips(tripId: string): TravelTips | null {
+    const tips = localStorage.getItem(`tips-${tripId}`)
+
+    if (!tips) {
+        return null
+    }
+
+    try {
+        return JSON.parse(tips) as TravelTips
+    } catch {
+        console.error(`Could not parse tips for trip ${tripId}`)
+        return null
+    }
+}
+
+export function saveTips(tripId: string, tips: TravelTips): void {
+    try {
+        localStorage.setItem(`tips-${tripId}`, JSON.stringify(tips))
+    } catch (error) {
+        console.error("Failed to save tips", error)
     }
 }

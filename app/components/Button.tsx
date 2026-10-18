@@ -23,7 +23,7 @@ export default function Button({ children, onClick, variant = "secondary", disab
     };
 
     return (
-        <button onClick={onClick} disabled={disabled} type={type} className={`${variantStyles[variant]} ${sizeStyles[size]}`}
+        <button onClick={onClick} disabled={disabled} type={type} className={`${variantStyles[variant]} ${sizeStyles[size]} disabled:opacity-50 disabled:cursor-not-allowed`}
         >
             {children}
         </button>
