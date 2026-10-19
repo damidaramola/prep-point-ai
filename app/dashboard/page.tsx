@@ -141,7 +141,7 @@ export default function Dashboard() {
                                 <span className="grid gap-2 flex-1 min-w-0">
                                     <span className="flex flex-wrap items-baseline justify-between gap-x-3">
                                         <span className="font-semibold text-slate-900">{trip.flyingFrom} → {trip.flyingTo}</span>
-                                        <span className="text-xs font-medium text-sky-600">{confidence}% ready</span>
+                                        <span className="font-rounded text-sm font-bold text-sky-600">{confidence}% ready</span>
                                     </span>
                                     <span className="text-sm text-slate-500">{formatDate(trip.fromDate)} · Flight {trip.flightNumber}</span>
                                     <ProgressBar progress={confidence} />
@@ -174,6 +174,7 @@ export default function Dashboard() {
                                 <div className="flex flex-wrap gap-2">
                                     <Button variant="primary" onClick={() => router.push(`/timeline/${selected.trip.id}`)}>Open timeline</Button>
                                     <Button onClick={() => router.push(`/packing/${selected.trip.id}`)}>Packing list</Button>
+                                    <Button onClick={() => router.push(`/trip-setup/${selected.trip.id}`)}>Edit flight</Button>
                                     {!confirmingDelete && (
                                         <Button onClick={() => setConfirmingDelete(true)}>
                                             <span className="text-red-600">Delete trip</span>
@@ -213,7 +214,7 @@ export default function Dashboard() {
                                     <p className="text-lg font-bold text-slate-900">{upcoming.trip.flyingTo}</p>
                                     <p className="text-sm text-slate-500">{departsIn(upcoming.departure, now)} · Flight {upcoming.trip.flightNumber}</p>
                                     <ProgressBar progress={upcoming.confidence} />
-                                    <p className="text-xs text-slate-500">{upcoming.confidence}% ready</p>
+                                    <p className="font-rounded text-sm font-bold text-sky-600">{upcoming.confidence}% ready</p>
                                 </>
                             ) : (
                                 <p className="text-sm text-slate-500">No upcoming flights.</p>
