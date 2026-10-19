@@ -162,3 +162,11 @@ export function saveTips(tripId: string, tips: TravelTips): void {
         console.error("Failed to save tips", error)
     }
 }
+
+export function removeTips(tripId: string): void {
+    try {
+        localStorage.removeItem(`tips-${tripId}`)
+    } catch (error) {
+        console.error("Failed to remove tips", error)
+    }
+}

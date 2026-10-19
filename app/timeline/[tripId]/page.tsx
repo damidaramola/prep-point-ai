@@ -119,7 +119,10 @@ export default function Timeline() {
 
     return (
         <PageShell>
-            <BackLink href="/dashboard">My trips</BackLink>
+            <div className="flex items-center justify-between gap-3">
+                <BackLink href="/dashboard">My trips</BackLink>
+                <Button size="sm" onClick={() => router.push(`/trip-setup/${trip.id}`)}>Edit flight</Button>
+            </div>
             <PageHeader
                 title={`${trip.flyingFrom} → ${trip.flyingTo}`}
                 subtitle={`Flight ${trip.flightNumber} · ${trip.fromDate} at ${trip.departureTime}`}
