@@ -1,25 +1,19 @@
 "use client"
 
-import {useState} from "react";
+import { useState } from "react";
+import FormField, { inputProps } from "./FormField";
+import { COUNTRIES } from "@/lib/countries";
 
-
-const cities = [
-  "Dublin, Ireland",
-  "New York, USA",
-  "London, UK",
-  "Paris, France",
-  "Berlin, Germany",
-  "Madrid, Spain",
-  "Rome, Italy",
-];
-
+const MAX_SUGGESTIONS = 8;
 type Props = {
+  id: string;
   label: string;
   value: string;
+  error?: string;
   onChangeAction: (value: string) => void;
 };
 
-export default function Autocomplete({ label, value, onChangeAction }: Props) {
+export default function Autocomplete({ id, label, value, error, onChangeAction }: Props) {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -27,48 +21,49 @@ export default function Autocomplete({ label, value, onChangeAction }: Props) {
     const input = e.target.value;
     onChangeAction(input);
 
-    if (input.length === 0) {
+    const query = input.trim().toLowerCase();
+    if (query.length === 0) {
       setSuggestions([]);
       return;
     }
 
-    const filtered = cities.filter((city) =>
-      city.toLowerCase().includes(input.toLowerCase())
+    setSuggestions(
+      COUNTRIES.filter((country) => country.toLowerCase().includes(query)).slice(0, MAX_SUGGESTIONS)
     );
-
-    setSuggestions(filtered);
     setShowDropdown(true);
   };
 
-  const handleSelect = (city: string) => {
-    onChangeAction(city);
+  const handleSelect = (country: string) => {
+    onChangeAction(country);
     setSuggestions([]);
     setShowDropdown(false);
   };
 
   return (
-    <div className="flex flex-col relative">
-      <label className="mb-1 font-medium">{label}</label>
-
-      <input
-        className="border p-2 rounded"
-        value={value}
-        onChange={handleInputChange}
-        onFocus={() => setShowDropdown(true)}
-        placeholder="e.g City, Country"
-        required
-
-      />
+    <div className="relative">
+      <FormField id={id} label={label} error={error}>
+        <input
+          {...inputProps(id, error)}
+          value={value}
+          onChange={handleInputChange}
+          onFocus={() => setShowDropdown(true)}
+          onBlur={() => setShowDropdown(false)}
+          placeholder="Start typing a country"
+          autoComplete="off"
+          maxLength={60}
+        />
+      </FormField>
 
       {showDropdown && suggestions.length > 0 && (
-        <ul className="absolute top-full left-0 w-full bg-white border rounded shadow mt-1 z-10 max-h-40 overflow-y-auto">
-          {suggestions.map((city) => (
+        <ul className="absolute top-full left-0 z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+          {suggestions.map((country) => (
             <li
-              key={city}
-              onClick={() => handleSelect(city)}
-              className="p-2 hover:bg-blue-100 cursor-pointer"
+              key={country}
+              // mousedown fires before the input's blur closes the list
+              onMouseDown={(e) => { e.preventDefault(); handleSelect(country); }}
+              className="cursor-pointer px-3 py-2 text-sm text-slate-700 hover:bg-sky-50"
             >
-              {city}
+              {country}
             </li>
           ))}
         </ul>
@@ -76,4 +71,3 @@ export default function Autocomplete({ label, value, onChangeAction }: Props) {
     </div>
   );
 }
-

@@ -1,28 +1,43 @@
 "use client"
 
+import { buildTimeline, PACK_BAGS_TITLE } from "@/lib/timeline";
+import { TimeLineTask, TravelTips } from "@/app/types";
+import ProgressBar from "@/app/components/ProgressBar";
+import ChecklistItem from "@/app/components/ChecklistItem";
+import Card from "@/app/components/Cards";
+import Spinner from "@/app/components/Spinner";
+import PageShell, { PageHeader, BackLink } from "@/app/components/PageShell";
+import TripNotFound from "@/app/components/TripNotFound";
+import IconTile from "@/app/components/IconTile";
+import { SparklesIcon } from "@/app/components/Icons";
+
 import { useState } from "react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { saveTasks, getTasks, getPackingComplete } from "@/lib/storage";
+import { saveTasks, getTasks, getPackingComplete, getTips, saveTips } from "@/lib/storage";
 import { useTrip } from "@/app/hooks/useTrip";
 import Button from "@/app/components/Button";
 
-const todos = [
-    { id: 1, title: "Check passport", done: false },
-    { id: 2, title: "Book flights", done: false },
-    { id: 3, title: "Reserve accommodation", done: false },
-    { id: 4, title: "Arrange insurance", done: false },
-    { id: 5, title: "Pack bags", done: false }
-
-];
-
+function formatDue(iso: string): string {
+    return new Date(iso).toLocaleString(undefined, {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+}
 
 export default function Timeline() {
 
     const router = useRouter();
-    const {trip,status,tripId} = useTrip();
-    const [tasks, setTasks] = useState(todos);
+    const { trip, status } = useTrip();
+    const [tasks, setTasks] = useState<TimeLineTask[]>([]);
     const [tasksLoaded, setTasksLoaded] = useState(false);
+    const [tips, setTips] = useState<TravelTips | null>(null);
+    const [tipsStatus, setTipsStatus] = useState<"loading" | "done" | "error">("loading");
+    // Bumping this re-runs the tips effect, which is how the retry button works.
+    const [tipsAttempt, setTipsAttempt] = useState(0);
 
     const toggleTask = (id: number) => {
         setTasks(prev =>
@@ -33,100 +48,154 @@ export default function Timeline() {
         ? Math.round((tasks.filter(t => t.done).length / tasks.length) * 100)
         : 0;
 
-
-
+    // Load saved tasks, or build a fresh timeline from the flight details.
     useEffect(() => {
-        if (!tripId || typeof tripId !== "string") return;
-        const storedTasks = getTasks(tripId)
-        if (storedTasks.length> 0) {
-            setTasks(storedTasks)
-        } else {
-            setTasks(todos);
-        }
+        if (status !== "found" || !trip) return;
+
+        const stored = getTasks(trip.id);
+        // Tasks saved before due times existed have the old shape, so rebuild them.
+        const usable = stored.length > 0 && stored.every(task => typeof task.dueAt === "string");
+        const loaded = usable ? stored : buildTimeline(trip);
+
+        // The packing page records completion separately; reflect it here.
+        setTasks(
+            getPackingComplete(trip.id)
+                ? loaded.map(task => task.title === PACK_BAGS_TITLE ? { ...task, done: true } : task)
+                : loaded
+        );
         setTasksLoaded(true);
-    }, [tripId]);
+    }, [status, trip]);
 
     useEffect(() => {
-        if (!tasksLoaded || !tripId || typeof tripId !== "string") return;
-        saveTasks(tripId, tasks)
-    }, [tasks, tripId, tasksLoaded]);
+        if (!tasksLoaded || !trip) return;
+        saveTasks(trip.id, tasks)
+    }, [tasks, trip, tasksLoaded]);
 
-
+    // Use cached tips if we have them; otherwise ask the API once and cache the result.
     useEffect(() => {
-        if (!tripId || typeof tripId !== "string") return;
+        if (status !== "found" || !trip) return;
 
-        const isPacked = getPackingComplete(tripId)
-
-        if (isPacked === true) {
-            setTasks(prev =>
-                prev.map(task =>
-                    task.title === "Pack bags"
-                        ? { ...task, done: true }
-                        : task
-                )
-            );
+        const cached = getTips(trip.id);
+        if (cached) {
+            setTips(cached);
+            setTipsStatus("done");
+            return;
         }
-    }, [trip]
 
+        let cancelled = false;
+        setTipsStatus("loading");
 
-    );
+        async function loadTips(currentTrip: NonNullable<typeof trip>) {
+            try {
+                const res = await fetch("/api/travel-tips", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(currentTrip),
+                });
+                if (!res.ok) throw new Error(`Request failed with ${res.status}`);
 
-if(status === "loading"){
-    return(<div>Loading..</div>)
-     
-}
-else if(
-    status ==="not-found"
-){
-    
-        return (<div>Trip not found<Button variant="secondary" size="md"  onClick={() => router.push("/landing")}
- >go to landing page</Button></div>);
-    
-}
+                const data: TravelTips = await res.json();
+                if (cancelled) return;
+                saveTips(currentTrip.id, data);
+                setTips(data);
+                setTipsStatus("done");
+            } catch (error) {
+                console.error("Could not load travel tips", error);
+                if (!cancelled) setTipsStatus("error");
+            }
+        }
+        loadTips(trip);
+
+        // If the trip changes or the page closes before the response arrives, ignore it.
+        return () => { cancelled = true };
+    }, [status, trip, tipsAttempt]);
+
+    if (status === "loading") {
+        return (<PageShell><Spinner className="justify-center py-20" /></PageShell>)
+    }
+    if (status === "not-found" || !trip) {
+        return <TripNotFound />;
+    }
+
     return (
-        <div className="max-w-xl mx-auto p-6">
-            <h1 className="text-xl font-semibold mb-3">Pre-Flight Checklist ✈️</h1>
-            <h2 className="text-sm text-gray-600 mb-4">
-                {trip?.FlyingFrom} → {trip?.FlyingTo} | {trip?.FromDate} → {trip?.ToDate}
-            </h2>
-            {/* Progress bar */}
-            <div className="bg-gray-200 rounded h-3 mb-4 overflow-hidden">
-                <div className="bg-blue-500 h-full" style={{ width: `${completion}%` }} />
+        <PageShell>
+            <div className="flex items-center justify-between gap-3">
+                <BackLink href="/dashboard">My trips</BackLink>
+                <Button size="sm" onClick={() => router.push(`/trip-setup/${trip.id}`)}>Edit flight</Button>
             </div>
-            <p className="text-sm mb-4">{completion}% complete</p>
+            <PageHeader
+                title={`${trip.flyingFrom} → ${trip.flyingTo}`}
+                subtitle={`Flight ${trip.flightNumber} · ${trip.fromDate} at ${trip.departureTime}`}
+            />
 
-            <ul className="space-y-3">
-                {tasks.map(task => (
-                    <li
-                        key={task.id}
-                        className="flex items-center gap-3 border p-3 rounded cursor-pointer"
-                    >
-                        <input
-                            type="checkbox"
+            <Card className="grid gap-3">
+                <div className="flex items-center gap-3">
+                    <IconTile><SparklesIcon /></IconTile>
+                    <h2 className="font-semibold text-slate-900">Tips for {trip.flyingTo}</h2>
+                </div>
+                {tipsStatus === "loading" && <Spinner label="Getting tips…" />}
+                {tipsStatus === "error" && (
+                    <div className="flex flex-wrap items-center gap-3">
+                        <p className="text-sm text-slate-500">Couldn&apos;t load tips right now.</p>
+                        <Button size="sm" onClick={() => setTipsAttempt(n => n + 1)}>Try again</Button>
+                    </div>
+                )}
+                {tipsStatus === "done" && tips && (
+                    <ul className="grid gap-2 text-sm text-slate-600">
+                        {tips.tips.map(tip => (
+                            <li key={tip} className="flex gap-2">
+                                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-400" aria-hidden="true" />
+                                <span>{tip}</span>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </Card>
+
+            <Card className="grid gap-2">
+                <div className="flex items-center justify-between">
+                    <h2 className="font-semibold text-slate-900">Pre-flight checklist</h2>
+                    <span className="text-sm font-medium text-sky-600">{completion}% complete</span>
+                </div>
+                <ProgressBar progress={completion} />
+            </Card>
+
+            {tasksLoaded && tasks.length === 0 ? (
+                <Card className="grid gap-3 text-center">
+                    <p className="text-sm text-slate-500">This trip has no departure time, so a timeline can&apos;t be built.</p>
+                    <Button variant="primary" onClick={() => router.push("/trip-setup")}>
+                        Create a new trip
+                    </Button>
+                </Card>
+            ) : (
+                <ul className="grid gap-2">
+                    {tasks.map(task => (
+                        <ChecklistItem
+                            key={task.id}
+                            label={task.title}
                             checked={task.done}
-                            onChange={() => toggleTask(task.id)}
-                            className="h-5 w-5"
+                            onToggle={() => toggleTask(task.id)}
+                            detail={formatDue(task.dueAt)}
                         />
-                        <span className={task.done ? "line-through text-gray-500" : ""}>
-                            {task.title}
-                        </span>
-                    </li>
-                ))}
-            </ul>
+                    ))}
+                </ul>
+            )}
 
-            <div className="mt-6">
-                <button
-                    type="button"
-                    onClick={() => router.push(`/packing/${tripId}`)}
-                    className="border p-2 rounded"
+            {completion === 100 ? (
+                <Button variant="primary" size="lg" onClick={() => router.push(`/completion/${trip.id}`)}>
+                    I&apos;m ready
+                </Button>
+            ) : (
+                /* The packing list uses the tips' packing suggestions, so wait for them. */
+                <Button
+                    variant="primary"
+                    size="lg"
+                    disabled={tipsStatus === "loading"}
+                    onClick={() => router.push(`/packing/${trip.id}`)}
                 >
-                    Lets Pack!
-                </button>
-            </div>
-
-
-        </div>
-
+                    Let&apos;s pack
+                </Button>
+            )}
+        </PageShell>
     );
 }
-

@@ -41,3 +41,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# save-fix skill and log (local only)
+.claude/skills/save-fix/
+FIX_LOG.md
+.claude/skills/new-concepts/
+CONCEPTS.md
+docs/roadmap.md

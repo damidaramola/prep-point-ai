@@ -4,8 +4,16 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTrip } from "@/app/hooks/useTrip"
 import { PackingItem } from "@/app/types";
-import { getPackingItems, savePackingItems, setPackingComplete } from "@/lib/storage";
+import { getPackingItems, savePackingItems, setPackingComplete, getTips } from "@/lib/storage";
 import Button from "@/app/components/Button";
+import ChecklistItem from "@/app/components/ChecklistItem";
+import ProgressBar from "@/app/components/ProgressBar";
+import Spinner from "@/app/components/Spinner";
+import Card from "@/app/components/Cards";
+import PageShell, { PageHeader, BackLink } from "@/app/components/PageShell";
+import TripNotFound from "@/app/components/TripNotFound";
+import { LuggageIcon } from "@/app/components/Icons";
+
 const defaultItems: PackingItem[] = [
   { id: 1, name: "T-shirts", category: "Clothing", packed: false },
   { id: 2, name: "Pants", category: "Clothing", packed: false },
@@ -25,21 +33,21 @@ export default function PackingPage() {
   const [items, setItems] = useState<PackingItem[]>([]);
   const [itemsLoaded, setItemsLoaded] = useState(false);
 
-  // Load from localStorage using backtick template literal
   useEffect(() => {
-    if (!tripId ||status !== "found"|| typeof tripId !== "string") return;
+    if (!tripId || status !== "found" || typeof tripId !== "string") return;
     const storedItems = getPackingItems(tripId);
-    if (storedItems.length > 0) {
-      setItems(storedItems)
-    }
-    else {
-      setItems(defaultItems);
-    }
+    const suggested = getTips(tripId)?.packingItems ?? [];
+
+    const loaded: PackingItem[] =
+      storedItems.length > 0 ? storedItems
+        : suggested.length > 0 ? suggested.map((item, i) => ({ id: i + 1, ...item, packed: false }))
+          : defaultItems;
+    setItems(loaded);
     setItemsLoaded(true);
   }, [tripId, status]);
 
   useEffect(() => {
-    if (!itemsLoaded || status !== "found"|| !tripId || typeof tripId !== "string") return;
+    if (!itemsLoaded || status !== "found" || !tripId || typeof tripId !== "string") return;
     savePackingItems(tripId, items)
   }, [items, tripId, itemsLoaded, status]);
 
@@ -50,9 +58,9 @@ export default function PackingPage() {
   const isComplete = overallProgress === 100;
 
   useEffect(() => {
-    if (!itemsLoaded ||status !== "found"|| !tripId || typeof tripId !== "string") return;
+    if (!itemsLoaded || status !== "found" || !tripId || typeof tripId !== "string") return;
     setPackingComplete(tripId, isComplete);
-  }, [isComplete, tripId,status]);
+  }, [isComplete, tripId, status,itemsLoaded]);
 
   const toggleItem = (id: number) => {
     setItems((prev) =>
@@ -64,35 +72,27 @@ export default function PackingPage() {
 
   const categories = [...new Set(items.map((i) => i.category))];
   if (status === "loading") {
-    return (<div>Loading..</div>)
-
+    return (<PageShell><Spinner className="justify-center py-20" /></PageShell>)
   }
-  else if (
-    status === "not-found"
-  ) {
-
-    return (<div>Trip not found<Button variant="secondary" size="md" onClick={() => router.push("/landing")}
-    >go to landing page</Button></div>);
-
+  if (status === "not-found") {
+    return <TripNotFound />;
   }
   return (
-    <div className="max-w-xl mx-auto p-6">
-      <h1 className="text-xl font-bold mb-4">Packing Checklist 🎒</h1>
+    <PageShell>
+      <BackLink href={`/timeline/${tripId}`}>Back to timeline</BackLink>
+      <PageHeader
+        title="Packing Checklist"
+        subtitle={isComplete ? "All packed. You're ready to go!" : `${packed} of ${total} items packed`}
+        icon={<LuggageIcon className="h-6 w-6" />}
+      />
 
-      <button
-        type="button"
-        onClick={() => router.push(`/timeline/${tripId}`)}
-        className="mb-4 border p-2 rounded text-sm"
-      >
-        ← Back to Timeline
-      </button>
-
-      <div className="mb-6">
-        <div className="bg-gray-200 h-3 rounded overflow-hidden">
-          <div className="bg-green-500 h-full" style={{ width: `${overallProgress}%` }} />
+      <Card className="grid gap-2">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold text-slate-900">Overall</h2>
+          <span className="text-sm font-medium text-sky-600">{overallProgress}% packed</span>
         </div>
-        <p className="text-sm mt-1">{overallProgress}% packed</p>
-      </div>
+        <ProgressBar progress={overallProgress} />
+      </Card>
 
       {categories.map((category) => {
         const categoryItems = items.filter((i) => i.category === category);
@@ -100,28 +100,29 @@ export default function PackingPage() {
         const percent = Math.round((done / categoryItems.length) * 100);
 
         return (
-          <div key={category} className="mb-6">
-            <h2 className="font-semibold mb-2">{category}</h2>
-            <div className="bg-gray-100 h-2 rounded mb-3 overflow-hidden">
-              <div className="bg-blue-400 h-full" style={{ width: `${percent}%` }} />
+          <section key={category} className="grid gap-3">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-slate-900">{category}</h2>
+              <span className="text-xs text-slate-500">{done}/{categoryItems.length}</span>
             </div>
-            <ul className="space-y-2">
+            <ProgressBar progress={percent} />
+            <ul className="grid gap-2">
               {categoryItems.map((item) => (
-                <li key={item.id} className="flex items-center gap-2 border p-2 rounded">
-                  <input
-                    type="checkbox"
-                    checked={item.packed}
-                    onChange={() => toggleItem(item.id)}
-                  />
-                  <span className={item.packed ? "line-through text-gray-400" : ""}>
-                    {item.name}
-                  </span>
-                </li>
+                <ChecklistItem
+                  key={item.id}
+                  label={item.name}
+                  checked={item.packed}
+                  onToggle={() => toggleItem(item.id)}
+                />
               ))}
             </ul>
-          </div>
+          </section>
         );
       })}
-    </div>
+
+      <Button variant="primary" size="lg" onClick={() => router.push("/dashboard")}>
+        Go to my trips
+      </Button>
+    </PageShell>
   );
 }

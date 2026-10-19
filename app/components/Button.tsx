@@ -11,19 +11,19 @@ interface ButtonProps {
 export default function Button({ children, onClick, variant = "secondary", disabled, type = "button", size = "md" }
     : ButtonProps) {
     const sizeStyles = {
-        sm: "text-sm px-2 py-1",
-        md: "text-base px-3 py-2",
-        lg: "text-lg px-4 py-3",
+        sm: "text-sm px-3 py-1.5",
+        md: "text-sm px-4 py-2.5",
+        lg: "text-base px-6 py-3",
     };
 
     const variantStyles = {
-        primary: "bg-blue-600 text-white rounded",
-        secondary: "border rounded",
-        danger: "bg-red-500 text-white font-bold rounded",
+        primary: "bg-linear-to-r from-blue-500 to-cyan-400 text-white font-semibold rounded-lg shadow-sm hover:opacity-90",
+        secondary: "bg-white border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-50",
+        danger: "bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600",
     };
 
     return (
-        <button onClick={onClick} disabled={disabled} type={type} className={`${variantStyles[variant]} ${sizeStyles[size]}`}
+        <button onClick={onClick} disabled={disabled} type={type} className={`${variantStyles[variant]} ${sizeStyles[size]} disabled:opacity-50 disabled:cursor-not-allowed`}
         >
             {children}
         </button>

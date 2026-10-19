@@ -1,4 +1,4 @@
-import { Trip, PackingItem, TimeLineTask } from "@/app/types"
+import { Trip, PackingItem, TimeLineTask, TravelTips } from "@/app/types"
 
 
 export function getTrip(tripId: string): Trip | null {
@@ -33,6 +33,7 @@ export function deleteTrip(tripId: string): void {
         localStorage.removeItem(`tasks-${tripId}`)
         localStorage.removeItem(`packing-${tripId}`)
         localStorage.removeItem(`packingComplete-${tripId}`)
+        localStorage.removeItem(`tips-${tripId}`)
     } catch (error) {
         console.error("Failed to delete trip", error)
     }
@@ -55,9 +56,14 @@ export function getAllTrips(): Trip[] {
 
             }
 
-            const trip = JSON.parse(value) as Trip
+            try {
+                const trip = JSON.parse(value) as Trip
+                trips.push(trip)
+            } catch {
+                console.error(`Failed to parse trip data for trip ${key}`)
+                continue
+            }
 
-            trips.push(trip)
         }
 
     }
@@ -119,7 +125,11 @@ export function saveTasks(tripId: string, tasks: TimeLineTask[]): void {
 
 export function getPackingComplete(tripId: string): boolean {
     const isPacked = localStorage.getItem(`packingComplete-${tripId}`)
-    return JSON.parse(isPacked ?? "false")  as boolean
+    try { return JSON.parse(isPacked ?? "false") as boolean }
+    catch {
+        console.error(`Could not parse ${isPacked}`)
+        return false
+    }
 }
 
 export function setPackingComplete(tripId: string, value: boolean): void {
@@ -127,5 +137,36 @@ export function setPackingComplete(tripId: string, value: boolean): void {
         localStorage.setItem(`packingComplete-${tripId}`, JSON.stringify(value))
     } catch (error) {
         console.error('Failed to save result', error)
+    }
+}
+
+export function getTips(tripId: string): TravelTips | null {
+    const tips = localStorage.getItem(`tips-${tripId}`)
+
+    if (!tips) {
+        return null
+    }
+
+    try {
+        return JSON.parse(tips) as TravelTips
+    } catch {
+        console.error(`Could not parse tips for trip ${tripId}`)
+        return null
+    }
+}
+
+export function saveTips(tripId: string, tips: TravelTips): void {
+    try {
+        localStorage.setItem(`tips-${tripId}`, JSON.stringify(tips))
+    } catch (error) {
+        console.error("Failed to save tips", error)
+    }
+}
+
+export function removeTips(tripId: string): void {
+    try {
+        localStorage.removeItem(`tips-${tripId}`)
+    } catch (error) {
+        console.error("Failed to remove tips", error)
     }
 }
