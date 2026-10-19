@@ -24,6 +24,7 @@ PrepPoint AI is a flight preparation web app that helps travellers get ready fro
 - [Testing](#testing)
 - [Validation](#validation)
 - [Bugs](#bugs)
+- [Future Features](#future-features)
 - [Deployment](#deployment)
 - [Credits](#credits)
 - [Media](#media)
@@ -190,6 +191,19 @@ npm test
 | Clicking a trip on the dashboard seemed to do nothing | The details opened below all the cards, off screen. They now open directly under the clicked card. |
 | The AI route sometimes returns a 500 | Gemini occasionally fails or is overloaded. The app shows a Try again button and falls back to a default packing list. |
 | Random text could be entered in the form | Added a shared validation function used by the form and the API, with a country list and inline errors. |
+
+##### Back to [top](#table-of-contents)
+
+## Future Features
+
+This is the MVP. Next, I plan to add:
+
+- User accounts, so trips are saved and synced across devices.
+- Smarter flight details, with less typing and live flight information.
+- More personalised timelines that adapt to how each person likes to travel.
+- Reminders that let users know when it's time for each task.
+- Richer destination information with more accurate, up-to-date travel insights.
+- Improved reliability and more automated testing.
 
 ##### Back to [top](#table-of-contents)
 
